@@ -1,4 +1,4 @@
-jqcalendar
+jqCalendar
 ==========
 
 jQuery based Calendar
