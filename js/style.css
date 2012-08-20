@@ -1,0 +1,19 @@
+#jqcal_calendar table
+{
+	border-collapse: collapse;
+	table-layout: fixed;
+	text-align: center;
+}
+#jqcal_calendar table, #jqcal_calendar th, #jqcal_calendar td
+{
+	border: 1px solid black;
+}
+#jqcal_calendar td
+{
+	height: 40px;
+	border-color:#BBBBBB;
+}
+div.ui-datepicker{
+	font-size:11px;
+}
+
