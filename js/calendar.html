@@ -40,8 +40,33 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		
 		jqcal.templates.event += '<br />{{people}}';
-		jqcal.templates.event_create += '<br />People: <input type="text" id="jqcal_event_create_people" />';
-		jqcal.templates.event_edit += '<br />People: <input type="text" id="jqcal_event_edit_people" />';
+		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
+			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
+		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
+			'<br />Gender: <input type="radio" name="jqcal_event_edit_gender" value="M" /> M<input type="radio" name="jqcal_event_edit_gender" value="F" /> F';
+		jqcal.templates.event_read += '<br />Unique: {{unique}}<br />Gender: {{gender}}';
+		jqcal.event.push({
+			name: 'people',
+			elements: ['view', 'create', 'edit'],
+			check: function(val) {
+				if(!val.match(/[1-9]\d*/)) {
+					return false;
+				}
+			}
+		}, {
+			name: 'unique',
+			elements: ['create', 'read', 'edit'],
+			type: 'checkbox'
+		}, {
+			name: 'gender',
+			elements: ['create', 'read', 'edit'],
+			type: 'radio',
+			check: function(val) {
+				if(!val) {
+					return false;
+				}
+			}
+		});
 		
 		$('#calendar').jqcal({
 			calendar_ends_at: $.now() + 365*24*60*60*1000,

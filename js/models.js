@@ -151,11 +151,10 @@ Agenda = Backbone.Model.extend({
 			if(this.get('id')) {
 				agenda.id = this.get('id');
 			}
-			var attributes = jqcal.templates_attributes;
-			attributes = _.union(attributes.agenda, attributes.agenda_create, attributes.agenda_read, attributes.agenda_edit);
-			for(var attribute in attributes) {
-				agenda[attributes[attribute]] = this.get(attributes[attribute]);
-			}
+			var self = this;
+			_.each(jqcal.agenda, function(attribute) {
+				agenda[attribute.name] = self.get(attribute.name);
+			});
 			$('.jqcal').data('plugin').get('agenda_created')(agenda);
 		}
 	},
@@ -253,11 +252,10 @@ Event = Backbone.Model.extend({
 				if(this.get('id')) {
 					event.id = this.get('id');
 				}
-				var attributes = jqcal.templates_attributes;
-				attributes = _.union(attributes.event, attributes.event_create, attributes.event_read, attributes.event_edit);
-				for(var attribute in attributes) {
-					event[attributes[attribute]] = this.get(attributes[attribute]);
-				}
+				var self = this;
+				_.each(jqcal.event, function(attribute) {
+					event[attribute.name] = self.get(attribute.name);
+				});
 				$('.jqcal').data('plugin').get('event_created')(event);
 				
 				this.on('change', this.onChange);
@@ -290,8 +288,6 @@ Event = Backbone.Model.extend({
 		$('.' + this.cid).remove();
 		this.unbindTimeslots();
 		this.get('view').remove();
-		console.log(this);
-		//die;
 		this.collection.remove(this);
 		/*var children = this.get('children').models;
 		for(var c in children){
@@ -318,11 +314,10 @@ Event = Backbone.Model.extend({
 			description: this.get('description'),
 			is_occurrence: this.cid
 		};
-		var attributes = jqcal.templates_attributes;
-		attributes = _.union(attributes_event, attributes.event_create, attributes.event_read, attributes.event_edit);
-		for(var attribute in attributes){
-			object[attributes[attribute]] = this.get(attributes[attribute]);
-		}
+		var self = this;
+		_.each(jqcal.event, function(attribute) {
+			object[attribute.name] = self.get(attribute.name);
+		});
 		var starts_at = this.get('starts_at');
 		var ends_at = this.get('ends_at');
 		switch(recurrency.type) {

@@ -15,6 +15,9 @@ var jqcal = new function() {
 		shortMonths: 'M'
 	};
 	this.colors = ['ffffff', 'ffccc9', 'ffce93', 'fffc9e', 'ffffc7', '9aff99', '96fffb', 'cdffff', 'cbcefb', 'cfcfcf', 'fd6864', 'fe996b', 'fffe65', 'fcff2f', '67fd9a', '38fff8', '68fdff', '9698ed', 'c0c0c0', 'fe0000', 'f8a102', 'ffcc67', 'f8ff00', '34ff34', '68cbd0', '34cdf9', '6665cd', '9b9b9b', 'cb0000', 'f56b00', 'ffcb2f', 'ffc702', '32cb00', '00d2cb', '3166ff', '6434fc', '656565', '9a0000', 'ce6301', 'cd9934', '999903', '009901', '329a9d', '3531ff', '6200c9', '343434', '680100', '963400', '986536', '646809', '036400', '34696d', '00009b', '303498', '000000', '330001', '643403', '663234', '343300', '013300', '003532', '010066', '640096'];
+	this.agenda = [];
+	this.event = [];
+	
 	this.get = function(key) {
 		if(_.isString(key)) {
 			if(_.has(convert, key)) {
@@ -66,48 +69,6 @@ var jqcal = new function() {
 	var methods = {
 		init: function(settings) {
 			this.opt = $.extend(true, {}, $.fn.jqcal.defaults, settings);
-			
-			// get the added attributes
-			jqcal.templates_attributes.agenda = _.filter(_.map(jqcal.templates.agenda.match(/\{\{\w+(?=\}\})/g), function(value) {
-				return value.substr(2);
-			}), function(value) {
-				return _.indexOf(['label', 'color'], value) == -1;
-			});
-			jqcal.templates_attributes.agenda_create = _.filter(_.map(jqcal.templates.agenda_create.match(/jqcal_agenda_create_\w+/g), function(value) {
-				return value.substr(20);
-			}), function(value) {
-				return _.indexOf(['label', 'description', 'color', 'transparency_past', 'transparency_recurrency', 'create', 'cancel'], value) == -1;
-			});
-			jqcal.templates_attributes.agenda_read = _.filter(_.map(jqcal.templates.agenda_read.match(/\{\{\w+(?=\}\})/g), function(value) {
-				return value.substr(2);
-			}), function(value) {
-				return _.indexOf(['label', 'description', 'color', 'transparency_past', 'transparency_recurrency', 'delete', 'close', 'edit'], value) == -1;
-			});
-			jqcal.templates_attributes.agenda_edit = _.filter(_.map(jqcal.templates.agenda_edit.match(/jqcal_agenda_edit_\w+/g), function(value) {
-				return value.substr(18);
-			}), function(value) {
-				return _.indexOf(['label', 'description', 'color', 'transparency_past', 'transparency_recurrency', 'save', 'cancel'], value) == -1;
-			});
-			jqcal.templates_attributes.event = _.filter(_.map(jqcal.templates.event.match(/\{\{\w+(?=\}\})/g), function(value) {
-				return value.substr(2);
-			}), function(value) {
-				return _.indexOf(['label', 'starts_at', 'ends_at'], value) == -1;
-			});
-			jqcal.templates_attributes.event_create = _.filter(_.map(jqcal.templates.event_create.match(/jqcal_event_create_\w+/g), function(value) {
-				return value.substr(19);
-			}), function(value) {
-				return _.indexOf(['label', 'agenda', 'recurrency', 'create', 'cancel', 'edit'], value) == -1;
-			});
-			jqcal.templates_attributes.event_read = _.filter(_.map(jqcal.templates.event_read.match(/\{\{\w+(?=\}\})/g), function(value) {
-				return value.substr(2);
-			}), function(value) {
-				return _.indexOf(['starts_at', 'ends_at', 'label', 'description', 'agenda'], value) == -1;
-			});
-			jqcal.templates_attributes.event_edit = _.filter(_.map(jqcal.templates.event_edit.match(/jqcal_event_edit_\w+/g), function(value) {
-				return value.substr(17);
-			}), function(value) {
-				return _.indexOf(['date_start', 'starts_at', 'date_end', 'ends_at', 'label', 'description', 'agenda', 'color', 'recurrency', 'save', 'cancel'], value) == -1;
-			});
 			
 			// compile the templates
 			for(var template in jqcal.templates) {
