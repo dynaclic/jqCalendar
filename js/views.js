@@ -533,8 +533,6 @@ PlanningView = Backbone.View.extend({
 				}
 			});
 		}
-		var fin = (new Date()).getTime();
-		console.log('execution render_multi_events : ' + (fin - debut) + ' ms');
 	}
 });
 
@@ -664,8 +662,8 @@ AgendaView = Backbone.View.extend({
 			if(_.has(diff, 'color')) {
 				self.setColor();
 			}
-			_.each(jqcal.templates_attributes.agenda, function(attribute) {
-				if(_.has(diff, attribute)) {
+			_.each(jqcal.agenda, function(attribute) {
+				if(_.indexOf(attribute.elements, 'view') != -1 && _.has(diff, attribute.name)) {
 					self.setTemplate();
 				}
 			});
@@ -748,8 +746,12 @@ AgendaView = Backbone.View.extend({
 			label: this.model.get('label')			
 		};
 		var self = this;
-		_.each(jqcal.templates_attributes.agenda, function(attribute) {
-			object[attribute] = self.model.get(attribute);
+		_.each(jqcal.agenda, function(attribute) {
+			if(_.indexOf(attribute.elements, 'view')) {
+				if(self.model.get(attribute.name) != undefined) {
+					object[attribute.name] = self.model.get(attribute.name).toString();
+				}
+			}
 		});
 		var template = jqcal.templates.agenda(object);
 		this.$el.html(template);
@@ -774,8 +776,8 @@ EventView = Backbone.View.extend({
 			if(_.has(diff, 'agenda') || _.has(diff, 'ends_at')){
 				self.setOpacity();
 			}
-			_.each(jqcal.templates_attributes.event, function(attribute) {
-				if(_.has(diff, attribute)) {
+			_.each(jqcal.event, function(attribute) {
+				if(_.indexOf(attribute.elements, 'view') != -1 && _.has(diff, attribute.name)) {
 					self.setTemplate();
 				}
 			});
@@ -1529,8 +1531,12 @@ EventView = Backbone.View.extend({
 				label: this.model.get('label')
 			};
 			var self = this;
-			_.each(jqcal.templates_attributes.full_day_event, function(attribute) {
-				object[attribute] = self.model.get(attribute);
+			_.each(jqcal.full_day_event, function(attribute) {
+				if(_.indexOf(attribute.elements, 'view') != -1) {
+					if(self.model.get(attribute.name) != undefined) {
+						object[attribute.name] = self.model.get(attribute.name).toString();
+					}
+				}
 			});
 			var template = jqcal.templates.full_day_event(object);
 		}
@@ -1541,12 +1547,15 @@ EventView = Backbone.View.extend({
 				label: this.model.get('label')
 			};
 			var self = this;
-			_.each(jqcal.templates_attributes.event, function(attribute) {
-				object[attribute] = self.model.get(attribute);
+			_.each(jqcal.event, function(attribute) {
+				if(_.indexOf(attribute.elements, 'view') != -1) {
+					if(self.model.get(attribute.name) != undefined) {
+						object[attribute.name] = self.model.get(attribute.name).toString();
+					}
+				}
 			});
 			var template = jqcal.templates.event(object);
 		}
-
 		this.$el.children(':first-child').html(template);
 	},
 	renderInit: function(infos_event, infos_extended) {
@@ -1885,7 +1894,7 @@ EventCreateView = Backbone.View.extend({
 		});
 		
 		// recurrency
-		$('#jqcal_event_create_recurrency').click(function() {
+		$('[name = jqcal_event_create_recurrency]').click(function() {
 			if($(this).is(':checked')) {
 				new RecurrencyView({
 					el: $('#jqcal_recurrency')
@@ -1901,15 +1910,32 @@ EventCreateView = Backbone.View.extend({
 		var action = $(originalTarget).attr('id').match(/_[a-zA-Z]+$/).toString().substr(1);
 		if(action == 'create') {
 			var object = {
-				label: $('#jqcal_event_create_label').val() || 'untitled',
-				agenda: $('#jqcal_event_create_agenda').val()
+				label: $('[name = jqcal_event_create_label]').val() || 'untitled',
+				agenda: $('[name = jqcal_event_create_agenda]').val()
 			};
-			if($('#jqcal_event_create_recurrency').is(':checked')) {
-				object.recurrency = JSON.parse($('#jqcal_event_create_recurrency').val());
+			if($('[name = jqcal_event_create_recurrency]').is(':checked')) {
+				object.recurrency = JSON.parse($('[name = jqcal_event_create_recurrency]').val());
 			}
-			_.each(jqcal.templates_attributes.event_create, function(attribute) {
-				object[attribute] = $('#jqcal_event_create_'+attribute).val();
-			});
+			for(var attribute in jqcal.event) {
+				if(_.indexOf(jqcal.event[attribute].elements, 'create') != -1) {
+					if(jqcal.event[attribute].type == 'radio') {
+						var val = $('[name = jqcal_event_create_'+jqcal.event[attribute].name+']:checked').val();
+					}
+					else if(jqcal.event[attribute].type == 'checkbox') {
+						var val = $('[name = jqcal_event_create_'+jqcal.event[attribute].name+']').is(':checked');
+					}
+					else {
+						var val = $('[name = jqcal_event_create_'+jqcal.event[attribute].name+']').val();
+					}
+					if(!jqcal.event[attribute].check || jqcal.event[attribute].check(val) !== false) {
+						object[jqcal.event[attribute].name] = val;
+					}
+					else {
+						alert('Incorrect value for attribute: '+jqcal.event[attribute].name+'.');
+						return false;
+					}
+				}
+			}
 			this.model.set(object);
 			this.model.get('view').$el.qtip('destroy');
 			this.$el.data('view', '');
@@ -1953,8 +1979,12 @@ EventReadView = Backbone.View.extend({
 			agenda: this.model.get('agenda')
 		};
 		var self = this;
-		_.each(jqcal.templates_attributes.event_read, function(attribute) {
-			object[attribute] = self.model.get(attribute);
+		_.each(jqcal.event, function(attribute) {
+			if(_.indexOf(attribute.elements, 'read') != -1) {
+				if(self.model.get(attribute.name) != undefined) {
+					object[attribute.name] = self.model.get(attribute.name).toString();
+				}
+			}
 		});
 		var template = jqcal.templates.event_read(object);
 		
@@ -2044,6 +2074,12 @@ EventEditView = Backbone.View.extend({
 		_.each(jqcal.colors, function(color) {
 			object.colors.push({color: color});
 		});
+		var self = this;
+		_.each(jqcal.event, function(attribute) {
+			if(_.indexOf(attribute.elements, 'edit') != -1) {
+				object[attribute.name] = self.model.get(attribute.name);
+			}
+		});
 		var template = jqcal.templates.event_edit(object);
 
 		// create the qtip window
@@ -2070,25 +2106,25 @@ EventEditView = Backbone.View.extend({
 		
 		// set the select on the right agenda
 		if(this.model.get('agenda')) {
-			$('#jqcal_event_edit_agenda').val(this.model.get('agenda'));
+			$('[name = jqcal_event_edit_agenda]').val(this.model.get('agenda'));
 		}
 		
 		// activate the color picker
-		$('#jqcal_event_edit_color').colourPicker({
+		$('[name = jqcal_event_edit_color]').colourPicker({
 			ico: './dependencies/jquery.colourPicker.gif',
 			title: 'Pick a color.'
 		});
 		$('#jquery-colour-picker').css('zIndex', 15001);
 		var color = this.model.get('color') ? this.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
-		$('#jqcal_event_edit_color').val(color).css('backgroundColor', '#' + $('#jqcal_event_edit_color').val());
+		$('[name = jqcal_event_edit_color]').val(color).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
 		
 		// link agenda & color
-		$('#jqcal_event_edit_agenda').change(function() {
-			$('#jqcal_event_edit_color').val($('.jqcal').data('agendas').where({label: $('#jqcal_event_edit_agenda').val()})[0].get('color').substr(1)).css('backgroundColor', '#' + $('#jqcal_event_edit_color').val());
+		$('[name = jqcal_event_edit_agenda]').change(function() {
+			$('[name = jqcal_event_edit_color]').val($('.jqcal').data('agendas').where({label: $('[name = jqcal_event_edit_agenda]').val()})[0].get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
 		});
 		
 		// recurrency
-		$('#jqcal_event_edit_recurrency').click(function() {
+		$('[name = jqcal_event_edit_recurrency]').click(function() {
 			if($(this).is(':checked')) {
 				new RecurrencyView({
 					el: $('#jqcal_recurrency')
@@ -2096,12 +2132,22 @@ EventEditView = Backbone.View.extend({
 			}
 		});
 		
+		var self = this;
+		_.each(jqcal.event, function(attribute) {
+			if(attribute.type == 'radio') {
+				$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
+			}
+			else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
+				$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
+			}
+		});
+		
 		if(this.model.get('recurrency')) {
-			$('#jqcal_event_edit_recurrency').attr('checked', 'checked').val(JSON.stringify(this.model.get('recurrency')));
+			$('[name = jqcal_event_edit_recurrency]').attr('checked', 'checked').val(JSON.stringify(this.model.get('recurrency')));
 		}
 		
 		if(this.model.get('is_occurrence')) {
-			$('#jqcal_event_edit_recurrency').hide();
+			$('[name = jqcal_event_edit_recurrency]').hide();
 		}
 	},
 	events: {
@@ -2115,27 +2161,44 @@ EventEditView = Backbone.View.extend({
 			var plugin = $('.jqcal').data('plugin');
 			
 			// set the model if the inputs are valid
-			var starts_at = new Date($('#jqcal_event_edit_date_start').val() + ' ' + $('#jqcal_event_edit_starts_at').val());
-			var ends_at = new Date($('#jqcal_event_edit_date_end').val() + ' ' + $('#jqcal_event_edit_ends_at').val());
-			if(starts_at != 'Invalid Date' && ends_at != 'Invalid Date' && starts_at.getTime() < ends_at.getTime() && $('#jqcal_event_edit_color').val().match(/^[0-9a-f]{6}/i)) {
+			var starts_at = new Date($('[name = jqcal_event_edit_date_start]').val() + ' ' + $('[name = jqcal_event_edit_starts_at]').val());
+			var ends_at = new Date($('[name = jqcal_event_edit_date_end]').val() + ' ' + $('[name = jqcal_event_edit_ends_at]').val());
+			if(starts_at != 'Invalid Date' && ends_at != 'Invalid Date' && starts_at.getTime() < ends_at.getTime() && $('[name = jqcal_event_edit_color]').val().match(/^[0-9a-f]{6}/i)) {
 				this.model.unbindTimeslots();
 				
 				var object = {
 					starts_at: starts_at.getTime() - getLocalTimezoneOffset() + plugin.get('timezone_offset'),
 					ends_at: ends_at.getTime() - getLocalTimezoneOffset() + plugin.get('timezone_offset'),
-					label: $('#jqcal_event_edit_label').val() || 'untitled',
-					description: $('#jqcal_event_edit_description').val(),
-					agenda: $('#jqcal_event_edit_agenda').val(),
-					color: '#'+$('#jqcal_event_edit_color').val(),
+					label: $('[name = jqcal_event_edit_label]').val() || 'untitled',
+					description: $('[name = jqcal_event_edit_description]').val(),
+					agenda: $('[name = jqcal_event_edit_agenda]').val(),
+					color: '#'+$('[name = jqcal_event_edit_color]').val(),
 					timeSlot_view: null
 				};
 				
-				if(!this.model.get('is_occurrence') && $('#jqcal_event_edit_recurrency').is(':checked')) {
-					object.recurrency = JSON.parse($('#jqcal_event_edit_recurrency').val());
+				if(!this.model.get('is_occurrence') && $('[name = jqcal_event_edit_recurrency]').is(':checked')) {
+					object.recurrency = JSON.parse($('[name = jqcal_event_edit_recurrency]').val());
 				}
-				_.each(jqcal.templates_attributes.event_edit, function(attribute) {
-					object[attribute] = $('#jqcal_event_edit_'+attribute).val();
-				});
+				for(var attribute in jqcal.event) {
+					if(_.indexOf(jqcal.event[attribute].elements, 'edit') != -1) {
+						if(jqcal.event[attribute].type == 'radio') {
+							var val = $('[name = jqcal_event_edit_'+jqcal.event[attribute].name+']:checked').val();
+						}
+						else if(jqcal.event[attribute].type == 'checkbox') {
+							var val = $('[name = jqcal_event_edit_'+jqcal.event[attribute].name+']').is(':checked');
+						}
+						else {
+							var val = $('[name = jqcal_event_edit_'+jqcal.event[attribute].name+']').val();
+						}
+						if(!jqcal.event[attribute].check || jqcal.event[attribute].check(val) !== false) {
+							object[jqcal.event[attribute].name] = val;
+						}
+						else {
+							alert('Incorrect value for attribute: '+jqcal.event[attribute].name+'.');
+							return false;
+						}
+					}
+				}
 				this.model.set(object);
 				this.model.bindTimeslots();
 				plugin.removeDialogs();
@@ -2268,7 +2331,7 @@ AgendaCreateView = Backbone.View.extend({
 		});
 		
 		// activate the color picker
-		$('#jqcal_agenda_create_color').colourPicker({
+		$('[name = jqcal_agenda_create_color]').colourPicker({
 			ico: './dependencies/jquery.colourPicker.gif',
 			title: 'Pick a color.'
 		});
@@ -2284,7 +2347,7 @@ AgendaCreateView = Backbone.View.extend({
 			// get the agendas
 			var agendas = $('.jqcal').data('agendas');
 		
-			var label = $('#jqcal_agenda_create_label').val();
+			var label = $('[name = jqcal_agenda_create_label]').val();
 			if(!label) {
 				alert('The label cannot be empty.');
 			}
@@ -2294,14 +2357,31 @@ AgendaCreateView = Backbone.View.extend({
 			else {
 				var object = {
 					label: label,
-					description: $('#jqcal_agenda_create_description').val() || 'no description',
-					color: '#'+$('#jqcal_agenda_create_color').val(),
-					transparency_past: $('#jqcal_agenda_create_transparency_past').is(':checked'),
-					transparency_recurrency: $('#jqcal_agenda_create_transparency_recurrency').is(':checked')
+					description: $('[name = jqcal_agenda_create_description]').val() || 'no description',
+					color: '#'+$('[name = jqcal_agenda_create_color]').val(),
+					transparency_past: $('[name = jqcal_agenda_create_transparency_past]').is(':checked'),
+					transparency_recurrency: $('[name = jqcal_agenda_create_transparency_recurrency]').is(':checked')
 				};
-				_.each(jqcal.templates_attributes.agenda_create, function(attribute) {
-					object[attribute] = $('#jqcal_agenda_create_'+attribute).val();
-				});
+				for(var attribute in jqcal.agenda) {
+					if(_.indexOf(jqcal.event[attribute].elements, 'create') != -1) {
+						if(jqcal.event[attribute].type == 'radio') {
+							var val = $('[name = jqcal_agenda_create_'+jqcal.event[attribute].name+']:checked').val();
+						}
+						else if(jqcal.event[attribute].type == 'checkbox') {
+							var val = $('[name = jqcal_agenda_create_'+jqcal.event[attribute].name+']').is(':checked');
+						}
+						else {
+							var val = $('[name = jqcal_agenda_create_'+jqcal.event[attribute].name+']').val();
+						}
+						if(!jqcal.event[attribute].check || jqcal.event[attribute].check(val) !== false) {
+							object[jqcal.event[attribute].name] = val;
+						}
+						else {
+							alert('Incorrect value for attribute: '+jqcal.event[attribute].name+'.');
+							return false;
+						}
+					}
+				}
 				var agenda = new Agenda(object);
 				agendas.push(agenda);
 				new AgendaView({
@@ -2332,8 +2412,12 @@ AgendaReadView = Backbone.View.extend({
 			transparency_recurrency: this.model.get('transparency_recurrency')
 		};
 		var self = this;
-		_.each(jqcal.templates_attributes.agenda_edit, function(attribute) {
-			object[attribute] = self.model.get(attribute);
+		_.each(jqcal.agenda, function(attribute) {
+			if(_.indexOf(attribute.elements, 'read') != -1) {
+				if(self.model.get(attribute.name) != undefined) {
+					object[attribute.name] = self.model.get(attribute.name).toString();
+				}
+			}
 		});
 		var template = jqcal.templates.agenda_read(object);
 		
@@ -2399,6 +2483,12 @@ AgendaEditView = Backbone.View.extend({
 		_.each(jqcal.colors, function(color) {
 			object.colors.push({color: color});
 		});
+		var self = this;
+		_.each(jqcal.agenda, function(attribute) {
+			if(_.indexOf(attribute.elements, 'edit') != -1) {
+				object[attribute.name] = self.model.get(attribute.name);
+			}
+		});
 		var template = jqcal.templates.agenda_edit(object);
 		
 		// create the qtip window
@@ -2424,22 +2514,32 @@ AgendaEditView = Backbone.View.extend({
 		});
 		
 		// activate the color picker
-		$('#jqcal_agenda_edit_color').colourPicker({
+		$('[name = jqcal_agenda_edit_color]').colourPicker({
 			ico: './dependencies/jquery.colourPicker.gif',
 			title: 'Pick a color.'
 		});
 		$('#jquery-colour-picker').css('zIndex', 15001);
-		$('#jqcal_agenda_edit_color').val(this.model.get('color').substr(1)).css('backgroundColor', '#' + $('#jqcal_agenda_edit_color').val());
+		$('[name = jqcal_agenda_edit_color]').val(this.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
 		
 		// set the transparency_past checkbox
 		if(this.model.get('transparency_past')) {
-			$('#jqcal_agenda_edit_transparency_past').attr('checked', 'checked');
+			$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
 		}
 		
 		// set the transparency_recurrency checkbox
 		if(this.model.get('transparency_recurrency')) {
-			$('#jqcal_agenda_edit_transparency_recurrency').attr('checked', 'checked');
+			$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
 		}
+		
+		var self = this;
+		_.each(jqcal.agenda, function(attribute) {
+			if(attribute.type == 'radio') {
+				$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
+			}
+			else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
+				$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
+			}
+		});
 	},
 	events: {
 		'click button': 'button'
@@ -2448,7 +2548,7 @@ AgendaEditView = Backbone.View.extend({
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
 		var action = $(originalTarget).attr('id').match(/_[a-zA-Z]+$/).toString().substr(1);
 		if(action == 'save') {
-			var label = $('#jqcal_agenda_edit_label').val();
+			var label = $('[name = jqcal_agenda_edit_label]').val();
 			if(!label) {
 				alert('The label cannot be empty.');
 			}
@@ -2458,13 +2558,30 @@ AgendaEditView = Backbone.View.extend({
 			else {
 				var object = {
 					label: label,
-					description: $('#jqcal_agenda_edit_description').val() || 'no description',
-					color: '#'+$('#jqcal_agenda_edit_color').val(),
-					transparency_past: $('#jqcal_agenda_edit_transparency_past').is(':checked')
+					description: $('[name = jqcal_agenda_edit_description]').val() || 'no description',
+					color: '#'+$('[name = jqcal_agenda_edit_color]').val(),
+					transparency_past: $('[name = jqcal_agenda_edit_transparency_past]').is(':checked')
 				};
-				_.each(jqcal.templates_attributes.agenda_edit, function(attribute) {
-					object[attribute] = $('#jqcal_agenda_edit_'+attribute).val();
-				});
+				for(var attribute in jqcal.agenda) {
+					if(_.indexOf(jqcal.event[attribute].elements, 'edit') != -1) {
+						if(jqcal.event[attribute].type == 'radio') {
+							var val = $('[name = jqcal_agenda_edit_'+jqcal.event[attribute].name+']:checked').val();
+						}
+						else if(jqcal.event[attribute].type == 'checkbox') {
+							var val = $('[name = jqcal_agenda_edit_'+jqcal.event[attribute].name+']').is(':checked');
+						}
+						else {
+							var val = $('[name = jqcal_agenda_edit_'+jqcal.event[attribute].name+']').val();
+						}
+						if(!jqcal.event[attribute].check || jqcal.event[attribute].check(val) !== false) {
+							object[jqcal.event[attribute].name] = val;
+						}
+						else {
+							alert('Incorrect value for attribute: '+jqcal.event[attribute].name+'.');
+							return false;
+						}
+					}
+				}
 				this.model.set(object);
 				$('.jqcal').data('plugin').removeDialogs();
 			}
@@ -2480,7 +2597,7 @@ AgendaEditView = Backbone.View.extend({
 RecurrencyView = Backbone.View.extend({
 	initialize: function() {
 		var context = $('#jqcal_event_create').data('view') ? 'create' : 'edit';
-		$('#jqcal_event_'+context+'_recurrency').removeAttr('checked');
+		$('[name = jqcal_event_'+context+'_recurrency]').removeAttr('checked');
 		$('.jqcal').qtip('destroy');
 		$('#jqcal_recurrency').data('view', this).unbind('click button');
 		this.render();
@@ -2596,7 +2713,7 @@ RecurrencyView = Backbone.View.extend({
 				recurrency['ends_after'] = parseInt($('#jqcal_recurrency_after_number').val());
 			}
 			var context = $('#jqcal_event_create').data('view') ? 'create' : 'edit';
-			$('#jqcal_event_'+context+'_recurrency').val(JSON.stringify(recurrency)).attr('checked', 'checked');
+			$('[name = jqcal_event_'+context+'_recurrency]').val(JSON.stringify(recurrency)).attr('checked', 'checked');
 			$('.jqcal').qtip('destroy');
 			this.$el.data('view', '');
 		}
