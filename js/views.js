@@ -595,18 +595,20 @@ DaySlotView = Backbone.View.extend({
 		'mousedown': 'createEvent'
 	},
 	createEvent: function() {
-		var full_day_event = new Event({
-			starts_at: this.model.get('starts_at'),
-			ends_at: this.model.get('ends_at'),
-			fullDay: true
-		});
-		
-		var full_day_event_view = new EventView({
-			model: full_day_event
-		});
-		
-		// call EventView's method creation_fd
-		full_day_event_view.creation_fd();
+		if(_.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'create') == -1) {
+			var full_day_event = new Event({
+				starts_at: this.model.get('starts_at'),
+				ends_at: this.model.get('ends_at'),
+				fullDay: true
+			});
+			
+			var full_day_event_view = new EventView({
+				model: full_day_event
+			});
+			
+			// call EventView's method creation_fd
+			full_day_event_view.creation_fd();
+		}
 	}
 });
 
@@ -1677,7 +1679,7 @@ EventExtendedView = Backbone.View.extend({
 		'mousedown': 'down'
 	},
 	read: function(e) {
-		if(this.model.get('super_model').get('agenda')) {
+		if(this.model.get('super_model').get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'read') == -1) {
 			new EventReadView({
 				el: $('#jqcal_event_read'),
 				model: this.model.get('super_model')
@@ -1717,7 +1719,7 @@ EventExtendedView = Backbone.View.extend({
 		$('html').on('mousemove', move);
 	},
 	actions: function(e) {
-		if(this.model.get('super_model').get('agenda')){
+		if(this.model.get('super_model').get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'edit') == -1){
 			
 			//collecte les infos initiales
 			var super_model = this.model.get('super_model');
