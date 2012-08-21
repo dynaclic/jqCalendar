@@ -831,7 +831,7 @@ EventView = Backbone.View.extend({
 			_.each(planning.get('days').models, function(day){
 				day.get('daySlot').get('events').remove(this_model);
 			});
-		}	
+		}
 		
 		// append it if it's in the planning
 		var day = inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
