@@ -67,6 +67,10 @@ PluginView = Backbone.View.extend({
 			}
 		});
 		
+		// apply the permissions
+		if(_.indexOf(this.model.get('no_perm_agenda'), 'create') != -1) {
+			$('#jqcal_agendas_new_button').remove();
+		}
 	},
 	events: {
 		'change #jqcal_nb_days_select': 'updateNbDays',
@@ -535,17 +539,19 @@ TimeSlotView = Backbone.View.extend({
 		'mousedown': 'createEvent'
 	},
 	createEvent: function() {
-		// instantiate the event
-		var event = new Event({
-			starts_at: this.model.get('starts_at'),
-			ends_at: this.model.get('ends_at')
-		});
-		
-		// instantiate the view
-		var event_view = new EventView({
-			model: event
-		});
-		event_view.creation();
+		if(_.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'create') == -1) {
+			// instantiate the event
+			var event = new Event({
+				starts_at: this.model.get('starts_at'),
+				ends_at: this.model.get('ends_at')
+			});
+			
+			// instantiate the view
+			var event_view = new EventView({
+				model: event
+			});
+			event_view.creation();
+		}
 	}
 });
 
@@ -629,10 +635,12 @@ AgendaView = Backbone.View.extend({
 		this.model.set('display', !this.model.get('display'));
 	},
 	read: function() {
-		new AgendaReadView({
-			model: this.model,
-			el: $('#jqcal_agenda_read')
-		});
+		if(_.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'read') == -1) {
+			new AgendaReadView({
+				model: this.model,
+				el: $('#jqcal_agenda_read')
+			});
+		}
 	},
 	setLabel: function() {
 		this.$el.children('span').html(' '+this.model.get('label'));
@@ -882,7 +890,7 @@ EventView = Backbone.View.extend({
 		'mousedown' : 'actions'
 	},
 	read: function(e) {
-		if(this.model.get('agenda')) {
+		if(this.model.get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'read') == -1) {
 			new EventReadView({
 				el: $('#jqcal_event_read'),
 				model: this.model
@@ -901,7 +909,7 @@ EventView = Backbone.View.extend({
 		return result;
 	},
 	actions: function(e) {
-		if(this.model.get('agenda')){
+		if(this.model.get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'edit') == -1){
 
 			//collecte les infos initiales
 			var infos_event = {
@@ -1498,6 +1506,11 @@ EventCreateView = Backbone.View.extend({
 				});
 			}
 		});
+		
+		// apply the permissions
+		if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
+			$('#jqcal_event_create_edit').remove();
+		}
 	},
 	events: {
 		'click button': 'button'
@@ -1599,6 +1612,14 @@ EventReadView = Backbone.View.extend({
 				}
 			}
 		});
+		
+		// apply the permissions
+		if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
+			$('#jqcal_event_read_edit').remove();
+		}
+		if(_.indexOf(plugin.get('no_perm_event'), 'delete') != -1) {
+			$('#jqcal_event_read_delete').remove();
+		}
 	},
 	events: {
 		'click button': 'button'
@@ -1664,28 +1685,38 @@ EventEditView = Backbone.View.extend({
 			}
 		});
 		var template = jqcal.templates.event_edit(object);
-
-		// create the qtip window
-		this.model.get('view').$el.qtip({
-			content: {
-				text: template,
-				title: {
-					text: 'Edit your event.'
+		
+		if(plugin.get('edit_dialog')) {
+			// create the qtip window
+			this.model.get('view').$el.qtip({
+				content: {
+					text: template,
+					title: {
+						text: 'Edit your event.'
+					}
+				},
+				show: {
+					event: false,
+					ready: true
+				},
+				hide: false,
+				position: {
+					container: this.$el,
+					corner: {
+						target: 'topRight',
+						tooltip: 'bottomLeft'
+					}
 				}
-			},
-			show: {
-				event: false,
-				ready: true
-			},
-			hide: false,
-			position: {
-				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
-			}
-		});
+			});
+		}
+		else {
+			$('#jqcal_event_edit').css({
+				zIndex: 1001,
+				backgroundColor: 'white',
+				width: $('.jqcal').width(),
+				height: $('.jqcal').height()
+			}).offset($('.jqcal').offset()).html(template);
+		}
 		
 		// set the select on the right agenda
 		if(this.model.get('agenda')) {
@@ -1985,6 +2016,9 @@ AgendaReadView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
+		// get the plugin
+		var plugin = $('.jqcal').data('plugin');
+	
 		// instantiate the template
 		var object = {
 			label: this.model.get('label'),
@@ -2024,6 +2058,14 @@ AgendaReadView = Backbone.View.extend({
 				}
 			}
 		});
+		
+		// apply the permissions
+		if(_.indexOf(plugin.get('no_perm_agenda'), 'edit') != -1) {
+			$('#jqcal_agenda_read_edit').remove();
+		}
+		if(_.indexOf(plugin.get('no_perm_agenda'), 'delete') != -1) {
+			$('#jqcal_agenda_read_delete').remove();
+		}
 	},
 	events: {
 		'click button': 'button'
@@ -2073,27 +2115,37 @@ AgendaEditView = Backbone.View.extend({
 		});
 		var template = jqcal.templates.agenda_edit(object);
 		
-		// create the qtip window
-		this.model.get('view').$el.qtip({
-			content: {
-				text: template,
-				title: {
-					text: 'Edit your agenda.'
+		if($('.jqcal').data('plugin').get('edit_dialog')) {
+			// create the qtip window
+			this.model.get('view').$el.qtip({
+				content: {
+					text: template,
+					title: {
+						text: 'Edit your agenda.'
+					}
+				},
+				show: {
+					event: false,
+					ready: true
+				},
+				hide: false,
+				position: {
+					container: this.$el,
+					corner: {
+						target: 'topRight',
+						tooltip: 'bottomLeft'
+					}
 				}
-			},
-			show: {
-				event: false,
-				ready: true
-			},
-			hide: false,
-			position: {
-				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
-			}
-		});
+			});
+		}
+		else {
+			$('#jqcal_agenda_edit').css({
+				zIndex: 1001,
+				backgroundColor: 'white',
+				width: $('.jqcal').width(),
+				height: $('.jqcal').height()
+			}).offset($('.jqcal').offset()).html(template);
+		}
 		
 		// activate the color picker
 		$('[name = jqcal_agenda_edit_color]').colourPicker({
@@ -2218,7 +2270,7 @@ RecurrencyView = Backbone.View.extend({
 					break;
 				case 'weekly':
 					var plugin = $('.jqcal').data('plugin');
-					var minDays = jqcal.get('minDays');
+					var minDays = jqcal.dates.minDays;
 					$('#jqcal_recurrency_when_weekly').html('When:<br />');
 					for(var i=0; i<7; i++) {
 						$('#jqcal_recurrency_when_weekly').append('<input type="checkbox" name="jqcal_recurrency_when_weekly" value="'+i+'" checked="checked" /><label>'+minDays[i]+'</label>');

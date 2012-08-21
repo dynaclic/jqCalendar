@@ -90,14 +90,14 @@ function timestampToFormat(timestamp, offset, format) {
 	var date = new Date(timestamp - offset * 60000);
 	var replaceBy = {
 		d: new Array(3-date.getUTCDate().toString().length).join('0')+date.getUTCDate().toString(),
-		D: jqcal.get('shortDays')[date.getUTCDay()],
+		D: jqcal.dates.shortDays[date.getUTCDay()],
 		j: date.getUTCDate(),
-		l: jqcal.get('days')[date.getUTCDay()],
+		l: jqcal.dates.days[date.getUTCDay()],
 		N: (date.getUTCDay()+6)%7 + 1,
 		w: date.getUTCDay(),
-		F: jqcal.get('months')[date.getUTCMonth()],
+		F: jqcal.dates.months[date.getUTCMonth()],
 		m: new Array(3-(date.getUTCMonth()+1).toString().length).join('0')+(date.getUTCMonth()+1).toString(),
-		M: jqcal.get('shortMonths')[date.getUTCMonth()],
+		M: jqcal.dates.shortMonths[date.getUTCMonth()],
 		n: date.getUTCMonth()+1,
 		Y: date.getUTCFullYear(),
 		y: date.getUTCFullYear().toString().substr(2,2)

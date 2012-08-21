@@ -1,67 +1,15 @@
 ;
 var jqcal = new function() {
-	var attributes = {
-		D: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-		l: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+	this.dates = {
+		shortDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+		days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 		minDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
-		F: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-		M: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-	};
-	var convert = {
-		shortDays: 'D',
-		days: 'l',
-		minDays: 'minDays',
-		months: 'F',
-		shortMonths: 'M'
+		months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+		shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 	};
 	this.colors = ['ffffff', 'ffccc9', 'ffce93', 'fffc9e', 'ffffc7', '9aff99', '96fffb', 'cdffff', 'cbcefb', 'cfcfcf', 'fd6864', 'fe996b', 'fffe65', 'fcff2f', '67fd9a', '38fff8', '68fdff', '9698ed', 'c0c0c0', 'fe0000', 'f8a102', 'ffcc67', 'f8ff00', '34ff34', '68cbd0', '34cdf9', '6665cd', '9b9b9b', 'cb0000', 'f56b00', 'ffcb2f', 'ffc702', '32cb00', '00d2cb', '3166ff', '6434fc', '656565', '9a0000', 'ce6301', 'cd9934', '999903', '009901', '329a9d', '3531ff', '6200c9', '343434', '680100', '963400', '986536', '646809', '036400', '34696d', '00009b', '303498', '000000', '330001', '643403', '663234', '343300', '013300', '003532', '010066', '640096'];
 	this.agenda = [];
 	this.event = [];
-	
-	this.get = function(key) {
-		if(_.isString(key)) {
-			if(_.has(convert, key)) {
-				return attributes[convert[key]];
-			}
-			else {
-				$.error('jqcal has no attribute "'+key+'".');
-			}
-		}
-		else {
-			$.error('The get method must receive a string.');
-		}
-	};
-	this.set = function(object) {
-		if(_.isObject(object)) {
-			_.each(object, function(value, key) {
-				if(_.has(convert, key)) {
-					switch(key) {
-						case 'minDays':
-						case 'shortDays':
-						case 'days':
-							if(value.length != 7) {
-								$.error('There must be exactly 7 days in the array.');
-							}
-							break;
-						case 'months':
-						case 'shortMonths':
-							if(value.length != 12) {
-								$.error('There must be exactly 12 months in the array.');
-							}
-							break;
-					}
-					attributes[convert[key]] = value;
-				}
-				else {
-					$.error('jqcal has no attribute "'+key+'".');
-				}
-			});
-			return this;
-		}
-		else {
-			$.error('The set method must receive an object.');
-		}
-	};
 };
 
 (function($) {
@@ -80,6 +28,9 @@ var jqcal = new function() {
 			
 			// instantiate the plugin
 			var plugin = new Plugin({
+				no_perm_agenda	: this.opt.no_perm_agenda,
+				no_perm_event	: this.opt.no_perm_event,
+				edit_dialog		: this.opt.edit_dialog,
 				calendar_ends_at: this.opt.calendar_ends_at,
 				date_format		: this.opt.date_format,
 				day_starts_at	: this.opt.day_starts_at,
@@ -211,7 +162,7 @@ var jqcal = new function() {
 
 			return this;
 		},
-		bindIds: function(ids) {
+		bindIdsToCids: function(ids) {
 			// get the agendas
 			var agendas = $('.jqcal').data('agendas');
 			_.each(ids, function(id, cid) {
@@ -230,7 +181,7 @@ var jqcal = new function() {
 			});
 			return this;
 		},
-		removeIds: function(ids) {
+		removeByIds: function(ids) {
 			var agendas = $('.jqcal').data('agendas');
 			_.each(ids, function(id) {
 				var model;
@@ -248,7 +199,7 @@ var jqcal = new function() {
 			});
 			return this;
 		},
-		removeCids: function(cids) {
+		removeByCids: function(cids) {
 			var agendas = $('.jqcal').data('agendas');
 			_.each(cids, function(cid) {
 				var model;
@@ -280,6 +231,9 @@ var jqcal = new function() {
 
 	// default values for the plugin and the planning
 	$.fn.jqcal.defaults = {
+		no_perm_agenda	: [],
+		no_perm_event	: [],
+		edit_dialog		: true,
 		date_format		: 'Y-m-d',
 		calendar_ends_at: $.now() + 3*365*24*60*60*1000,
 		day_starts_at	: 0,
@@ -295,7 +249,7 @@ var jqcal = new function() {
 		event_removed	: function(event) {return true;},
 		agenda_created	: function(agenda) {return true;},
 		agenda_changed	: function(agenda) {return true;},
-		agenda_remove	: function(agenda) {return true;}
+		agenda_removed	: function(agenda) {return true;}
 	};
 	
 })(jQuery);

@@ -16,7 +16,15 @@ Plugin = Backbone.Model.extend({
 		}
 		else if($('#jqcal_event_edit').data('view')) {
 			var dialog = $('#jqcal_event_edit').data('view');
-			dialog.model.get('view').$el.qtip('destroy');
+			if(this.get('edit_dialog')) {
+				dialog.model.get('view').$el.qtip('destroy');
+			}
+			else {
+				$('#jqcal_event_edit').css({
+					width: 0,
+					height: 0
+				}).html('')
+			}
 			if(!dialog.model.get('agenda')) {
 				dialog.model.get('view').remove();
 				$('.'+dialog.model.cid).remove();
@@ -32,7 +40,15 @@ Plugin = Backbone.Model.extend({
 			$('#jqcal_agenda_read').data('view', '');
 		}
 		else if($('#jqcal_agenda_edit').data('view')) {
-			$('#jqcal_agenda_edit').data('view').model.get('view').$el.qtip('destroy');
+			if(this.get('edit_dialog')) {
+				$('#jqcal_agenda_edit').data('view').model.get('view').$el.qtip('destroy');
+			}
+			else {
+				$('#jqcal_agenda_edit').css({
+					width: 0,
+					height: 0
+				}).html('')
+			}
 			$('#jqcal_agenda_edit').data('view', '');
 		}
 		if($('#jqcal_event_delete').data('view')) {
