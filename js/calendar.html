@@ -10,7 +10,6 @@
 	<script type="text/javascript" src="./dependencies/jquery.qtip-1.0.0-rc3.min.js"></script>
 	<script type="text/javascript" src="./dependencies/jquery.colourPicker.js"></script>
 	<link rel=StyleSheet href="./dependencies/jquery.colourPicker.css">
-	<script type="text/javascript" src="./time.js"></script>
 	<script type="text/javascript" src="./jquery.calendar.js"></script>
 	<script type="text/javascript" src="./models.js"></script>
 	<script type="text/javascript" src="./collections.js"></script>
@@ -97,29 +96,29 @@
 				events: [
 					{
 						starts_at: event1,
-						ends_at: addHours(event1, 6)
+						ends_at: jqcal.time.addHours(event1, 6)
 					}, {
 						starts_at: event2,
-						ends_at: addHours(event2, 3.5)
+						ends_at: jqcal.time.addHours(event2, 3.5)
 					}, {
 						starts_at: event6,
-						ends_at: addHours(event6, 2)
+						ends_at: jqcal.time.addHours(event6, 2)
 					}, {
 						starts_at: event7,
-						ends_at: addHours(event7, 1.5)
+						ends_at: jqcal.time.addHours(event7, 1.5)
 					}, {
 						starts_at: event9,
-						ends_at: addHours(event9, 1)
+						ends_at: jqcal.time.addHours(event9, 1)
 					}, {
 						starts_at: event12,
-						ends_at: addHours(event12, 2)
+						ends_at: jqcal.time.addHours(event12, 2)
 					}, {
 						starts_at: event13,
-						ends_at: addHours(event13, 2)
+						ends_at: jqcal.time.addHours(event13, 2)
 					},
 					{
 						starts_at: event14,
-						ends_at: addHours(event14, 72),
+						ends_at: jqcal.time.addHours(event14, 72),
 						fullDay: true
 					}
 				]
@@ -130,26 +129,26 @@
 				events: [
 					{
 						starts_at: event3,
-						ends_at: addHours(event3, 3)
+						ends_at: jqcal.time.addHours(event3, 3)
 					}, {
 						starts_at: event4,
-						ends_at: addHours(event4, 3)
+						ends_at: jqcal.time.addHours(event4, 3)
 					}, {
 						starts_at: event5,
-						ends_at: addHours(event5, 2.5)
+						ends_at: jqcal.time.addHours(event5, 2.5)
 					}, {
 						starts_at: event8,
-						ends_at: addHours(event8, 1)
+						ends_at: jqcal.time.addHours(event8, 1)
 					}, {
 						starts_at: event10,
-						ends_at: addHours(event10, 1)
+						ends_at: jqcal.time.addHours(event10, 1)
 					}, {
 						starts_at: event11,
-						ends_at: addHours(event11, 34)
+						ends_at: jqcal.time.addHours(event11, 34)
 					},
 					{
 						starts_at: event14,
-						ends_at: addHours(event14, 48),
+						ends_at: jqcal.time.addHours(event14, 48),
 						fullDay: true
 					}
 				]

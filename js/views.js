@@ -198,19 +198,19 @@ PlanningView = Backbone.View.extend({
 		var object = {rows: [], hours: [], width: column_width, total_width: (total_width), hours_width: hours_width, fix_ie7: []};
 		for(var i = 0; i < (plugin.get('day_ends_at') - plugin.get('day_starts_at')) * (1/plugin.get('day_fraction')); i++) {
 			object.rows.push({id: 'jqcal_row_'+i});
-			var hour = addHours(this.model.get('starts_at'),(i*plugin.get('day_fraction') + plugin.get('day_starts_at')));
+			var hour = jqcal.time.addHours(this.model.get('starts_at'),(i*plugin.get('day_fraction') + plugin.get('day_starts_at')));
 			
 			// fix for ie7
 			if($.browser.msie && document.documentMode == '7') {
 				if(i == 0){
-					object.hours.push({id: 'jqcal_hour_'+i, hour: timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:50px;'});
+					object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:50px;'});
 				}
 				else{
-					object.hours.push({id: 'jqcal_hour_'+i, hour: timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:49px;'});
+					object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:49px;'});
 				}
 			}
 			else{
-				object.hours.push({id: 'jqcal_hour_'+i, hour: timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: ''});
+				object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: ''});
 			}
 		}
 		var template = jqcal.templates.planning(object);
@@ -244,7 +244,6 @@ PlanningView = Backbone.View.extend({
 		$('#jqcal_datepicker').datepicker('setDate', new Date(this.model.get('starts_at')));
 	},
 	parse_full_day: function() { // browse each day to determine the position of the events inside (for full day events)
-	var debut = (new Date()).getTime();
 		var all_events = [];
 		var max = 0;
 		//z index = 0
@@ -320,9 +319,6 @@ PlanningView = Backbone.View.extend({
 			all_events[e].get('view').$el.offset({top: pos_top_init + (zIndex - 1) * height_init});
 			all_events[e].get('view').$el.height((max - zIndex + 1) * height_init);
 		}
-		
-		var fin = (new Date()).getTime();
-		console.log('execution parse_full_days : ' + (fin - debut) + ' ms');
 	},
 	parse_each_day: function() {
 		var self = this;
@@ -377,7 +373,6 @@ PlanningView = Backbone.View.extend({
 	 * determine the right place for each events when they are on the same timeslot
 	 */
 	render_multi_events: function(timeslots, max){
-		var debut = (new Date()).getTime();
 		// get the z_index range
 		var total_z_index = [];
 		for(var i = 1; i <= max; i++){
@@ -551,7 +546,7 @@ DayView = Backbone.View.extend({
 	
 		// instantiate the template
 		var template = jqcal.templates.day({
-			title: timestampToFormat(this.model.get('date'), plugin.get('timezone_offset'), plugin.get('date_format'))
+			title: jqcal.time.timestampToFormat(this.model.get('date'), plugin.get('timezone_offset'), plugin.get('date_format'))
 		});
 		
 		// display the view
@@ -627,13 +622,13 @@ TimeSlotView = Backbone.View.extend({
 	
 		// instantiate the template
 		var template = jqcal.templates.timeSlot({
-			starts_at: timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
-			ends_at: timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset'))
+			starts_at: jqcal.time.timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
+			ends_at: jqcal.time.timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset'))
 		});
 		
 		// display the view
 		this.$el.append(template);
-		var id = Math.floor((this.model.get('starts_at') - addHours(getDay(this.model.get('starts_at'), plugin.get('timezone_offset')), plugin.get('day_starts_at'))) / (plugin.get('day_fraction') * 60 * 60 * 1000));
+		var id = Math.floor((this.model.get('starts_at') - jqcal.time.addHours(jqcal.time.getDay(this.model.get('starts_at'), plugin.get('timezone_offset')), plugin.get('day_starts_at'))) / (plugin.get('day_fraction') * 60 * 60 * 1000));
 		$('#jqcal_row_'+id).append(this.$el);
 	},
 	events: {
@@ -834,7 +829,7 @@ EventView = Backbone.View.extend({
 		}
 		
 		// append it if it's in the planning
-		var day = inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
+		var day = jqcal.time.inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
 		if(day) {
 			if(this.model.get('fullDay')){
 				this.setTemplate();
@@ -869,17 +864,17 @@ EventView = Backbone.View.extend({
 		// for the events in the planning (#jqcal_timeslots)
 		if(timeSlot_view = this.model.get('timeSlot_view')) {
 			var toDisplay = [];
-			if(this.model.get('ends_at') <= addHours(day.get('date'), plugin.get('day_ends_at'))) {	
+			if(this.model.get('ends_at') <= jqcal.time.addHours(day.get('date'), plugin.get('day_ends_at'))) {	
 				toDisplay.push(Math.ceil((this.model.get('ends_at') - timeSlot_view.model.get('starts_at')) / (plugin.get('day_fraction') * 60*60*1000)));
 			}
 			else {
-				toDisplay.push((addHours(day.get('date'), plugin.get('day_ends_at')) - timeSlot_view.model.get('starts_at')) / (plugin.get('day_fraction') * 60*60*1000));
+				toDisplay.push((jqcal.time.addHours(day.get('date'), plugin.get('day_ends_at')) - timeSlot_view.model.get('starts_at')) / (plugin.get('day_fraction') * 60*60*1000));
 				var from = _.indexOf(planning.get('days').models, day) + 1;
 				for(var i = from; i < planning.get('days').models.length; i++) {
 					if(this.model.get('ends_at') <= planning.get('days').models[i].get('timeSlots').models[0].get('starts_at')) {
 						break;
 					}
-					else if(this.model.get('ends_at') <= addHours(planning.get('days').models[i].get('date'), plugin.get('day_ends_at'))) {
+					else if(this.model.get('ends_at') <= jqcal.time.addHours(planning.get('days').models[i].get('date'), plugin.get('day_ends_at'))) {
 						toDisplay.push({
 							day: planning.get('days').models[i],
 							length: Math.ceil((this.model.get('ends_at') - planning.get('days').models[i].get('timeSlots').models[0].get('starts_at')) / (plugin.get('day_fraction') * 60*60*1000))
@@ -979,10 +974,10 @@ EventView = Backbone.View.extend({
 			toDisplay.shift();
 			this.model.get('children').reset();
 			for(var i in toDisplay) {
-				var beginning = addHours(toDisplay[i].day.get('date'), plugin.get('day_starts_at'));
+				var beginning = jqcal.time.addHours(toDisplay[i].day.get('date'), plugin.get('day_starts_at'));
 				var eventExtended = new EventExtended({
 					starts_at: beginning,
-					ends_at: addHours(beginning, (toDisplay[i].length)*plugin.get('day_fraction')),
+					ends_at: jqcal.time.addHours(beginning, (toDisplay[i].length)*plugin.get('day_fraction')),
 					super_model: this.model,
 					timeSlot_view: toDisplay[i].day.get('timeSlots').models[0].get('view')
 				});
@@ -1003,7 +998,7 @@ EventView = Backbone.View.extend({
 			var toDisplay = [];
 			var i = _.indexOf(planning.get('days').models, day);
 
-			while(planning.get('days').models[i] && this.model.get('ends_at') >= addHours(planning.get('days').models[i].get('date'), 24)){
+			while(planning.get('days').models[i] && this.model.get('ends_at') >= jqcal.time.addHours(planning.get('days').models[i].get('date'), 24)){
 				toDisplay.push(planning.get('days').models[i]);
 				i++;
 			}
@@ -1552,8 +1547,8 @@ EventView = Backbone.View.extend({
 		}
 		else {
 			var object = {
-				starts_at: timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
-				ends_at: timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
+				starts_at: jqcal.time.timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
+				ends_at: jqcal.time.timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
 				label: this.model.get('label')
 			};
 			var self = this;
@@ -1872,8 +1867,8 @@ EventCreateView = Backbone.View.extend({
 		
 		// instantiate the template
 		var object = {
-			starts_at: timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
-			ends_at: timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
+			starts_at: jqcal.time.timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
+			ends_at: jqcal.time.timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
 			agendas: []
 		};
 		_.each($('.jqcal').data('agendas').models, function(agenda) {
@@ -1987,8 +1982,8 @@ EventReadView = Backbone.View.extend({
 		
 		// instantiate the template
 		var object = {
-			starts_at: timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
-			ends_at: timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
+			starts_at: jqcal.time.timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
+			ends_at: jqcal.time.timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
 			label: this.model.get('label'),
 			description: this.model.get('description'),
 			agenda: this.model.get('agenda')
@@ -2082,10 +2077,10 @@ EventEditView = Backbone.View.extend({
 	
 		// instantiate the template
 		var object = {
-			date_start: timestampToDate(this.model.get('starts_at'), plugin.get('timezone_offset')),
-			date_end: timestampToDate(this.model.get('ends_at'), plugin.get('timezone_offset')),
-			starts_at: timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
-			ends_at: timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
+			date_start: jqcal.time.timestampToDate(this.model.get('starts_at'), plugin.get('timezone_offset')),
+			date_end: jqcal.time.timestampToDate(this.model.get('ends_at'), plugin.get('timezone_offset')),
+			starts_at: jqcal.time.timestampToTime(this.model.get('starts_at'), plugin.get('timezone_offset')),
+			ends_at: jqcal.time.timestampToTime(this.model.get('ends_at'), plugin.get('timezone_offset')),
 			label: this.model.get('label'),
 			description: this.model.get('description'),
 			agendas: [],

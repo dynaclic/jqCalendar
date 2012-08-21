@@ -91,9 +91,9 @@ Planning = Backbone.Model.extend({
 				break;
 		}
 		for(var i = 0; i < nb_days; i++) {
-			var date = addDays(this.get('starts_at'), i);
+			var date = jqcal.time.addDays(this.get('starts_at'), i);
 			
-			if((this.get('format') != 'week') || (_.indexOf(plugin.get('hidden_days'), timestampToDay(date, plugin.get('timezone_offset'))) == -1)) {
+			if((this.get('format') != 'week') || (_.indexOf(plugin.get('hidden_days'), jqcal.time.timestampToDay(date, plugin.get('timezone_offset'))) == -1)) {
 				var day = new Day({
 					date: date
 				});
@@ -115,8 +115,8 @@ Day = Backbone.Model.extend({
 		var collection = new TimeSlots();
 		for(var i = 0; i < plugin.get('day_ends_at') - plugin.get('day_starts_at'); i+= plugin.get('day_fraction')) {
 			var timeSlot = new TimeSlot({
-				starts_at: addHours(this.get('date'), plugin.get('day_starts_at') + i),
-				ends_at: addHours(this.get('date'), plugin.get('day_starts_at') + i + plugin.get('day_fraction'))
+				starts_at: jqcal.time.addHours(this.get('date'), plugin.get('day_starts_at') + i),
+				ends_at: jqcal.time.addHours(this.get('date'), plugin.get('day_starts_at') + i + plugin.get('day_fraction'))
 			});
 			collection.add(timeSlot);
 		}
@@ -124,7 +124,7 @@ Day = Backbone.Model.extend({
 		// instantiate the daySlot
 		var daySlot = new DaySlot({
 			starts_at: this.get('date'),
-			ends_at: addHours(this.get('date'), 24)
+			ends_at: jqcal.time.addHours(this.get('date'), 24)
 		});
 		
 		//  set the attributes
@@ -314,6 +314,9 @@ Event = Backbone.Model.extend({
 		}
 	},
 	remove: function() {
+		// get the planning
+		var planning = $('.jqcal').data('planning');
+	
 		// callback
 		var event = {
 			cid: this.cid
@@ -323,8 +326,17 @@ Event = Backbone.Model.extend({
 		}
 		$('.jqcal').data('plugin').get('event_removed')(event);
 		
-		$('.' + this.cid).remove();
-		this.unbindTimeslots();
+		// unbind this event from the dayslots
+		if(this.get('fullDay')){
+			var self = this;
+			_.each(planning.get('days').models, function(day){
+				day.get('daySlot').get('events').remove(self);
+			});
+		}
+		else {
+			$('.' + this.cid).remove();
+			this.unbindTimeslots();
+		}
 		this.get('view').remove();
 		this.collection.remove(this);
 	},
@@ -358,20 +370,20 @@ Event = Backbone.Model.extend({
 		switch(recurrency.type) {
 			case 'daily':
 				var i = 1;
-				while((recurrency.ends_on && addDays(this.get('ends_at'), i*recurrency.every) <= recurrency.ends_on)
+				while((recurrency.ends_on && jqcal.time.addDays(this.get('ends_at'), i*recurrency.every) <= recurrency.ends_on)
 				|| (recurrency.ends_after && i < recurrency.ends_after + 1)
-				|| (!recurrency.ends_on && !recurrency.ends_after && addDays(this.get('ends_at'), i*recurrency.every) <= plugin.get('calendar_ends_at'))) {
+				|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.addDays(this.get('ends_at'), i*recurrency.every) <= plugin.get('calendar_ends_at'))) {
 					new EventView({
 						model: new Event(_.extend(object, {
-							starts_at: addDays(starts_at, i*recurrency.every),
-							ends_at: addDays(ends_at, i*recurrency.every)
+							starts_at: jqcal.time.addDays(starts_at, i*recurrency.every),
+							ends_at: jqcal.time.addDays(ends_at, i*recurrency.every)
 						}))
 					});
 					i++;
 				}
 				break;
 			case 'weekly':
-				var date = (new Date(starts_at - $('.jqcal').data('plugin').get('timezone_offset') * 60000)).getDay();
+				var date = (new Date(starts_at - $('.jqcal').data('plugin').get('timezone_offset') * 60000)).jqcal.time.getDay();
 				var first_day = plugin.get('first_day');
 				var diff = [];
 				_.each(recurrency.when, function(day) {
@@ -381,18 +393,18 @@ Event = Backbone.Model.extend({
 				
 				var i = 0;
 				var j = 0;
-				while((recurrency.ends_on && addDays(ends_at, j*recurrency.every*7) < recurrency.ends_on)
+				while((recurrency.ends_on && jqcal.time.addDays(ends_at, j*recurrency.every*7) < recurrency.ends_on)
 					|| (recurrency.ends_after && i < recurrency.ends_after)
-					|| (!recurrency.ends_on && !recurrency.ends_after && addDays(ends_at, j*recurrency.every*7) < plugin.get('calendar_ends_at'))) {
+					|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.addDays(ends_at, j*recurrency.every*7) < plugin.get('calendar_ends_at'))) {
 					_.each(diff, function(jump) {
 						if(j != 0 || jump > 0) {
-							if((recurrency.ends_on && addDays(ends_at, jump + j*recurrency.every*7) < recurrency.ends_on)
+							if((recurrency.ends_on && jqcal.time.addDays(ends_at, jump + j*recurrency.every*7) < recurrency.ends_on)
 								|| (recurrency.ends_after && i < recurrency.ends_after)
-								|| (!recurrency.ends_on && !recurrency.ends_after && addDays(ends_at, jump + j*recurrency.every*7) < plugin.get('calendar_ends_at'))) {
+								|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.addDays(ends_at, jump + j*recurrency.every*7) < plugin.get('calendar_ends_at'))) {
 								new EventView({
 									model: new Event(_.extend(object, {
-										starts_at: addDays(starts_at, jump + j*recurrency.every*7),
-										ends_at: addDays(ends_at, jump + j*recurrency.every*7)
+										starts_at: jqcal.time.addDays(starts_at, jump + j*recurrency.every*7),
+										ends_at: jqcal.time.addDays(ends_at, jump + j*recurrency.every*7)
 									}))
 								});
 								i++;
@@ -407,11 +419,11 @@ Event = Backbone.Model.extend({
 					var date = (new Date(starts_at)).getDate();
 					var i = 0;
 					var j = 1;
-					while((recurrency.ends_on && addMonths(ends_at, j*recurrency.every) < recurrency.ends_on)
+					while((recurrency.ends_on && jqcal.time.addMonths(ends_at, j*recurrency.every) < recurrency.ends_on)
 						|| (recurrency.ends_after && i < recurrency.ends_after)
-						|| (!recurrency.ends_on && !recurrency.ends_after && addMonths(ends_at, j*recurrency.every) < plugin.get('calendar_ends_at'))) {
-						var new_starts_at = addMonths(starts_at, j*recurrency.every);
-						var new_ends_at = addMonths(ends_at, j*recurrency.every);
+						|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.addMonths(ends_at, j*recurrency.every) < plugin.get('calendar_ends_at'))) {
+						var new_starts_at = jqcal.time.addMonths(starts_at, j*recurrency.every);
+						var new_ends_at = jqcal.time.addMonths(ends_at, j*recurrency.every);
 						if((new Date(new_starts_at)).getDate() == date) {
 							new EventView({
 								model: new Event(_.extend(object, {
@@ -428,11 +440,11 @@ Event = Backbone.Model.extend({
 					var month = (new Date(starts_at)).getMonth();
 					var i = 0;
 					var j = 1;
-					while((recurrency.ends_on && getNthDay(starts_at, j*recurrency.every) < recurrency.ends_on)
+					while((recurrency.ends_on && jqcal.time.getNthDay(starts_at, j*recurrency.every) < recurrency.ends_on)
 						|| (recurrency.ends_after && i < recurrency.ends_after)
-						|| (!recurrency.ends_on && !recurrency.ends_after && getNthDay(starts_at, j*recurrency.every) < plugin.get('calendar_ends_at'))) {
-						var new_starts_at = getNthDay(starts_at, j*recurrency.every);
-						var new_ends_at = getNthDay(ends_at, j*recurrency.every);
+						|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.getNthDay(starts_at, j*recurrency.every) < plugin.get('calendar_ends_at'))) {
+						var new_starts_at = jqcal.time.getNthDay(starts_at, j*recurrency.every);
+						var new_ends_at = jqcal.time.getNthDay(ends_at, j*recurrency.every);
 						if((new Date(new_starts_at)).getMonth() == (month + j*recurrency.every)%12) {
 							new EventView({
 								model: new Event(_.extend(object, {
@@ -448,13 +460,13 @@ Event = Backbone.Model.extend({
 				break;
 			case 'yearly':
 				var i = 1;
-				while((recurrency.ends_on && addYears(this.get('ends_at'), i*recurrency.every) <= recurrency.ends_on)
+				while((recurrency.ends_on && jqcal.time.addYears(this.get('ends_at'), i*recurrency.every) <= recurrency.ends_on)
 					|| (recurrency.ends_after && i < recurrency.ends_after + 1)
-					|| (!recurrency.ends_on && !recurrency.ends_after && addYears(this.get('ends_at'), i*recurrency.every) <= plugin.get('calendar_ends_at'))) {
+					|| (!recurrency.ends_on && !recurrency.ends_after && jqcal.time.addYears(this.get('ends_at'), i*recurrency.every) <= plugin.get('calendar_ends_at'))) {
 					new EventView({
 						model: new Event(_.extend(object, {
-							starts_at: addYears(starts_at, i*recurrency.every),
-							ends_at: addYears(ends_at, i*recurrency.every)
+							starts_at: jqcal.time.addYears(starts_at, i*recurrency.every),
+							ends_at: jqcal.time.addYears(ends_at, i*recurrency.every)
 						}))
 					});
 					i++;
@@ -476,8 +488,6 @@ Event = Backbone.Model.extend({
 		}
 	},
 	bindTimeslots: function() {
-		//console.log('bind ' + this.cid);
-		
 		//on ne bind pas les events fullday
 		if(this.get('fullDay')){
 			return [];
@@ -490,7 +500,7 @@ Event = Backbone.Model.extend({
 		var days = planning.get('days');
 		
 		if(! this.get('timeSlot_view')){
-			var day = inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
+			var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
 		}
 		else {
 			var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
@@ -531,7 +541,6 @@ Event = Backbone.Model.extend({
 		}
 	},
 	unbindTimeslots: function() {
-		//console.log('unbind ' + this.cid);
 		if(this.get('fullDay')){
 			return [];
 		}
@@ -557,28 +566,7 @@ Event = Backbone.Model.extend({
 					}
 				}
 				
-			/*	var j = _.indexOf(days.models, day);
-				while(j < days.models.length){
-					var timeslots = days.models[j].get('timeSlots');
-					for(var t in timeslots){
-						
-					}
-				}*/
 				var children = this.get('children').models;
-				/*console.log('all_events');
-				console.log(all_events);*/
-			/*	var children = _.filter(all_events, function(event) {
-					return event.get('super_model') === this;
-				});
-				console.log('wtd');
-				for(var a in all_events){
-					console.log(all_events[a]);
-					if(all_events[a].get('super_model') == this){
-						_.union(children, all_events[a]);
-					}
-				}
-				console.log('children :');
-				console.log(children);*/
 				for(var c in children){
 					result = _.union(result, children[c].unbindTimeslots());
 				}
@@ -611,15 +599,10 @@ Event = Backbone.Model.extend({
 			i++;
 		}	
 		
-		var extended = all_events;//this.get('children').models;
-		console.log('unbindall //  extened.size  = ' + extended.length);
-		console.log(all_events);
+		var extended = all_events;
 		for(var e in extended){
 			extended[e].unbindTimeslots();
 		}
-		
-		
-		console.log('after :: ');
 		
 		while(i < days.models.length){
 			var timeslots = days.models[i].get('timeSlots').models;
@@ -632,9 +615,7 @@ Event = Backbone.Model.extend({
 				}
 			}
 			i++;
-		}	
-		console.log('all_events :');
-		console.log(all_events);
+		}
 	}
 });
 
@@ -648,13 +629,12 @@ EventExtended = Event.extend({
 		this.get('view').remove();
 	},
 	bindTimeslots: function() {
-		//console.log('bind extended : ' + this.cid);
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
 		var days = planning.get('days');
 
 		if(! this.get('timeSlot_view')){
-			var day = inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
+			var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
 		}
 		else {
 			var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
@@ -678,7 +658,6 @@ EventExtended = Event.extend({
 		}
 	},
 	unbindTimeslots: function() {
-		//console.log('unbind extended : ' + this.cid);
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
 		var days = planning.get('days');
