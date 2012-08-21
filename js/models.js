@@ -5,6 +5,7 @@ Plugin = Backbone.Model.extend({
 			var dialog = $('#jqcal_event_create').data('view');
 			dialog.model.get('view').$el.qtip('destroy');
 			if(!$('#jqcal_event_edit').data('view')) {
+				dialog.model.unbindTimeslots();
 				dialog.model.get('view').remove();
 				$('.'+dialog.model.cid).remove();
 			}
@@ -18,6 +19,7 @@ Plugin = Backbone.Model.extend({
 			var dialog = $('#jqcal_event_edit').data('view');
 			dialog.model.get('view').$el.qtip('destroy');
 			if(!dialog.model.get('agenda')) {
+				dialog.model.unbindTimeslots();
 				dialog.model.get('view').remove();
 				$('.'+dialog.model.cid).remove();
 			}
@@ -117,9 +119,18 @@ Day = Backbone.Model.extend({
 	}
 });
 
-DaySlot = Backbone.Model.extend();
+DaySlot = Backbone.Model.extend({
+	initialize: function() {
+		this.set({
+			events: new Events
+		});
+	}
+});
 
 TimeSlot = Backbone.Model.extend({
+	defaults: {
+		events: []
+	},
 	initialize: function() {
 		this.set({
 			events: new Events
@@ -172,9 +183,11 @@ Agenda = Backbone.Model.extend({
 		}
 		
 		this.get('view').remove();
-		_.each(this.get('events').models, function(event) {
-			event.remove();
-		});
+		var events = this.get('events').models;
+		var l = events.length
+		for(var i = 0; i < l; i++){
+			events[0].remove();
+		}
 		this.collection.remove(this);
 	},
 	setEventsAgenda: function() {
@@ -227,7 +240,7 @@ Event = Backbone.Model.extend({
 		if(this.get('recurrency')) {
 			this.createOccurrences();
 		}
-		this.on('change:agenda', this.setAgenda).on('change:starts_at', this.removeTimeslotView).on('change:recurrency', this.createOccurrences);
+		this.on('change:agenda', this.setAgenda).on('change:starts_at', this.removeView).on('change:recurrency', this.createOccurrences);
 	},
 	setAgenda: function() {
 		if($('.jqcal').data('agendas').where({label: this.previous('agenda')}).length || !this.previous('agenda')) {
@@ -237,6 +250,12 @@ Event = Backbone.Model.extend({
 				agenda.off('change:transparency_past change:transparency_recurrency', this.get('view').setOpacity);
 			}
 			else if(!this.get('id')) {
+				var collec = null;
+				if(this.collection && !$('.jqcal').data('agendas').where({events: this.collection}).length) {
+					//refaire collec
+					var collec = this.collection;
+					collec.remove(this);
+				}
 				// callback
 				var event = {
 					cid: this.cid,
@@ -268,6 +287,9 @@ Event = Backbone.Model.extend({
 			
 			// add the event to the agenda
 			agenda.get('events').push(this);
+			if(collec){
+				collec.push(this);
+			}
 			if(this.get('view')) {
 				agenda.on('change:transparency_past change:transparency_recurrency', this.get('view').setOpacity);
 			}
@@ -290,20 +312,22 @@ Event = Backbone.Model.extend({
 		$('.' + this.cid).remove();
 		this.unbindTimeslots();
 		this.get('view').remove();
-		console.log(this);
-		//die;
+
+		
 		this.collection.remove(this);
+		
 		/*var children = this.get('children').models;
 		for(var c in children){
 				children[c].remove();
 		}*/
 	},
-	removeTimeslotView: function() {
+	removeView: function() {
 		this.unbindTimeslots();
 		this.unset('timeSlot_view');
+		this.unset('daySlot_view');
 		var children = this.get('children').models;
 		for(var c in children){
-				children[c].removeTimeslotView();
+				children[c].removeView();
 		}
 	},
 	createOccurrences: function() {
@@ -434,7 +458,7 @@ Event = Backbone.Model.extend({
 	},
 	onChange: function() {
 		var event = this.changedAttributes();
-		_.each(['id', 'view', 'timeSlot_view'], function(attribute) {
+		_.each(['id', 'view', 'timeSlot_view', 'daySlot_view'], function(attribute) {
 			delete event[attribute];
 		});
 		if(_.keys(event).length) {
@@ -447,7 +471,13 @@ Event = Backbone.Model.extend({
 	},
 	bindTimeslots: function() {
 		//console.log('bind ' + this.cid);
-		//pour le render 
+		
+		//on ne bind pas les events fullday
+		if(this.get('fullDay')){
+			return [];
+		}
+		
+		//pour le render
 		this.get('view').$el.removeClass('unbind');
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
@@ -496,6 +526,10 @@ Event = Backbone.Model.extend({
 	},
 	unbindTimeslots: function() {
 		//console.log('unbind ' + this.cid);
+		if(this.get('fullDay')){
+			return [];
+		}
+		
 		//pour le render 
 		this.get('view').$el.addClass('unbind');
 
@@ -600,7 +634,7 @@ Event = Backbone.Model.extend({
 
 
 EventExtended = Event.extend({
-	removeTimeslotView: function() {
+	removeView: function() {
 		this.unset('timeSlot_view');
 	},
 	remove: function() {

@@ -191,7 +191,7 @@ var jqcal = new function() {
 					_.each(agendas.models, function(agenda) {
 						if(agenda.get('display')) {
 							_.each(agenda.get('events').models, function(event) {
-								if(event.get('timeSlot_view')) {
+								if(event.get('timeSlot_view') || event.get('daySlot_view')) {
 									event.unbindTimeslots();
 									event.get('view').render();
 									event.bindTimeslots();
@@ -201,6 +201,7 @@ var jqcal = new function() {
 					});
 					
 					planning.get('view').parse_each_day();
+					planning.get('view').parse_full_day();
 				}
 			});
 			
@@ -245,6 +246,7 @@ var jqcal = new function() {
 					event.bindTimeslots();
 				});
 				
+				$('.jqcal').data('planning').get('view').parse_full_day();
 				$('.jqcal').data('planning').get('view').parse_each_day();
 			});
 
@@ -334,7 +336,7 @@ var jqcal = new function() {
 		event_removed	: function(event) {return true;},
 		agenda_created	: function(agenda) {return true;},
 		agenda_changed	: function(agenda) {return true;},
-		agenda_remove	: function(agenda) {return true;}
+		agenda_removed	: function(agenda) {return true;}
 	};
 	
 })(jQuery);
