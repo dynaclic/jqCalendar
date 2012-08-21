@@ -2,7 +2,7 @@ var Days = Backbone.Collection.extend({
 	model: Day
 });
 
-varDaySlots = Backbone.Collection.extend({
+var DaySlots = Backbone.Collection.extend({
 	model : DaySlot
 });
 

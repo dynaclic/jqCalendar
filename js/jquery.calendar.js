@@ -103,7 +103,7 @@ var jqcal = new function() {
 					_.each(agendas.models, function(agenda) {
 						if(agenda.get('display')) {
 							_.each(agenda.get('events').models, function(event) {
-								if(event.get('timeSlot_view')) {
+								if(event.get('timeSlot_view') || event.get('daySlot_view')) {
 									event.unbindTimeslots();
 									event.get('view').render();
 									event.bindTimeslots();
@@ -113,6 +113,7 @@ var jqcal = new function() {
 					});
 					
 					planning.get('view').parse_each_day();
+					planning.get('view').parse_full_day();
 				}
 			});
 			
@@ -157,6 +158,7 @@ var jqcal = new function() {
 					event.bindTimeslots();
 				});
 				
+				$('.jqcal').data('planning').get('view').parse_full_day();
 				$('.jqcal').data('planning').get('view').parse_each_day();
 			});
 

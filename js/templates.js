@@ -77,6 +77,9 @@ jqcal.templates = {
 		'{{label}}<br />'+
 		'{{starts_at}} - {{ends_at}}'
 	,
+	full_day_event:
+		'{{label}}<br />'
+	,
 	// CRUD Event
 	event_create: 
 		'{{starts_at}} - {{ends_at}}<br />'+

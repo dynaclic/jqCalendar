@@ -38,6 +38,7 @@
 		event11 = new Date(('2012/08/23 12:00:00')).getTime();
 		event12 = new Date(('2012/08/24 12:00:00')).getTime();
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
+		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 		
 		jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
@@ -115,6 +116,11 @@
 					}, {
 						starts_at: event13,
 						ends_at: addHours(event13, 2)
+					},
+					{
+						starts_at: event14,
+						ends_at: addHours(event14, 72),
+						fullDay: true
 					}
 				]
 			},
@@ -140,6 +146,11 @@
 					}, {
 						starts_at: event11,
 						ends_at: addHours(event11, 34)
+					},
+					{
+						starts_at: event14,
+						ends_at: addHours(event14, 48),
+						fullDay: true
 					}
 				]
 			}
