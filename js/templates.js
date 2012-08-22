@@ -9,7 +9,7 @@ jqcal.templates = {
 				'<input type="radio" id="jqcal_toDay" name="jqcal_planning_format" value="day" /><label for="jqcal_toDay">Day</label>'+
 				'<input type="radio" id="jqcal_toCustomDay" name="jqcal_planning_format" value="custom_day" /><label for="jqcal_toCustomDay">Custom Days</label>'+
 				'<input type="radio" id="jqcal_toWeek" name="jqcal_planning_format" value="week" /><label for="jqcal_toWeek">Week</label>'+
-				'<input type="radio" id="jqcal_toCustomWeek" name="jqcal_planning_format" value="custom_week" /><label for="jqcal_toCustomMonth">Custom Months</label>'+
+				'<input type="radio" id="jqcal_toCustomWeek" name="jqcal_planning_format" value="custom_week" /><label for="jqcal_toCustomWeek">Custom Weeks</label>'+
 				'<input type="radio" id="jqcal_toMonth" name="jqcal_planning_format" value="month" /><label for="jqcal_toMonth">Month</label>'+
 			'</span><span>'+
 				'Days: <select id="jqcal_nb_days_select">'+
