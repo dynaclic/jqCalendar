@@ -40,7 +40,7 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 		
-		jqcal.templates.event += '<br />{{people}}';
+		/*jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
 			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
 		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
@@ -50,7 +50,7 @@
 			name: 'people',
 			elements: ['view', 'create', 'edit'],
 			check: function(val) {
-				if(!val.match(/[1-9]\d*/)) {
+				if(!val.match(/[1-9]\d/)) {
 					return false;
 				}
 			}
@@ -67,7 +67,7 @@
 					return false;
 				}
 			}
-		});
+		});*/
 		
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
@@ -89,8 +89,10 @@
 			agenda_removed	: function(agenda) {console.log('agenda removed:');console.log(agenda);},
 			event_created	: function(event) {console.log('event created:');console.log(event);},
 			event_changed	: function(event) {console.log('event changed:');console.log(event);},
-			event_removed	: function(event) {console.log('event removed:');console.log(event);}*/
-		}).jqcal('add', [
+			event_removed	: function(event) {console.log('event removed:');console.log(event);}*/,
+			event_init_event: function(event, action) {console.log('event init event:');console.log(event);console.log(action);},
+			event_stop_event: function(event, action) {console.log('event stop event:');console.log(event);console.log(action);}
+		})/*.jqcal('add', [
 			{
 				label: 'a',
 				description: 'some random description',
@@ -155,7 +157,7 @@
 					}
 				]
 			}
-		]);
+		])*/;
 		/*$('#calendar').jqcal('bindIds', {
 			'c258': 10,
 			'c260': 15,

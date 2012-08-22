@@ -1256,12 +1256,15 @@ EventView = Backbone.View.extend({
 			if(this.model.get('fullDay')){
 				if($(e.target).hasClass('handle-e')){
 					this.resize_e(e, pos_top_init);
+					var action = 'resize';
 				}
 				else if($(e.target).hasClass('handle-w')){
 					this.resize_w(e, pos_top_init);
+					var action = 'resize';
 				}
 				else{
 					this.drag_fd(e, pos_top_init);
+					var action = 'drag';
 				}
 			}
 			else {
@@ -1287,15 +1290,27 @@ EventView = Backbone.View.extend({
 				
 				if($(e.target).hasClass('handle-n')){
 					this.resize_n(e, toRenderFromUnbind, infos_event, infos_extended);
+					var action = 'resize';
 				}
 				else if($(e.target).hasClass('handle-s')){
 					this.resize_s(e, toRenderFromUnbind, infos_event, infos_extended);
+					var action = 'resize';
 				}
 				else{
 					this.drag(e, toRenderFromUnbind, infos_event, infos_extended);
+					var action = 'drag';
 				}
 			}
 		}
+		
+		// callback
+		var event = {
+			cid: this.model.cid
+		};
+		if(this.model.get('id')) {
+			event.id = this.model.get('id');
+		}
+		$('.jqcal').data('plugin').get('event_init_event')(event, action);
 	},
 	drag: function(e, toRenderFromUnbind, infos_event, infos_extended) {
 		$('.jqcal').disableSelection();
@@ -1338,6 +1353,15 @@ EventView = Backbone.View.extend({
 				var planning = $('.jqcal').data('planning');
 				planning.get('view').parse_days(toRender);
 			}
+			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'drag');
 		};
 		
 		$('html').on("mousemove", move);
@@ -1372,6 +1396,15 @@ EventView = Backbone.View.extend({
 			
 			self.$el.css('zIndex', '0');
 			$('.jqcal').data('planning').get('view').parse_full_day();
+			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'drag');
 		};
 		
 		$('html').on("mousemove", move);
@@ -1527,6 +1560,15 @@ EventView = Backbone.View.extend({
 				var planning = $('.jqcal').data('planning');
 				planning.get('view').parse_days(toRender);
 			}
+			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);
@@ -1573,6 +1615,15 @@ EventView = Backbone.View.extend({
 				var planning = $('.jqcal').data('planning');
 				planning.get('view').parse_days(toRender);
 			}
+			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);
@@ -1613,6 +1664,14 @@ EventView = Backbone.View.extend({
 			self.$el.css('zIndex', '0');
 			$('.jqcal').data('planning').get('view').parse_full_day();
 			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);
@@ -1652,6 +1711,15 @@ EventView = Backbone.View.extend({
 			self.$el.css('cursor', 'pointer');
 			self.$el.css('zIndex', '0');
 			$('.jqcal').data('planning').get('view').parse_full_day();
+			
+			// callback
+			var event = {
+				cid: self.model.cid
+			};
+			if(self.model.get('id')) {
+				event.id = self.model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);

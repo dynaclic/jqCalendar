@@ -328,7 +328,8 @@ Event = Backbone.Model.extend({
 					agenda: this.get('agenda'),
 					color: this.get('color'),
 					starts_at: this.get('starts_at'),
-					ends_at: this.get('ends_at')
+					ends_at: this.get('ends_at'),
+					fullDay: this.get('fullDay')
 				}
 				if(this.get('recurrency')) {
 					event.recurrency = this.get('recurrency');

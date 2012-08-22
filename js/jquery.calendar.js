@@ -189,7 +189,9 @@ var jqcal = new function() {
 				event_removed	: this.opt.event_removed,
 				agenda_created	: this.opt.agenda_created,
 				agenda_changed	: this.opt.agenda_changed,
-				agenda_removed	: this.opt.agenda_removed
+				agenda_removed	: this.opt.agenda_removed,
+				event_init_event: this.opt.event_init_event,
+				event_stop_event: this.opt.event_stop_event
 			});
 			this.data('plugin', plugin);
 
@@ -434,7 +436,9 @@ var jqcal = new function() {
 		event_removed	: function(event) {return true;},
 		agenda_created	: function(agenda) {return true;},
 		agenda_changed	: function(agenda) {return true;},
-		agenda_removed	: function(agenda) {return true;}
+		agenda_removed	: function(agenda) {return true;},
+		event_init_event: function(event, action) {return true;},
+		event_stop_event: function(event, action) {return true;}
 	};
 	
 })(jQuery);
