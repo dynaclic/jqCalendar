@@ -1876,6 +1876,7 @@ EventCreateView = Backbone.View.extend({
 		});
 		var template = jqcal.templates.event_create(object);
 		
+		var self = this;
 		// create the qtip window
 		this.model.get('view').$el.qtip({
 			content: {
@@ -1891,13 +1892,16 @@ EventCreateView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
+				my: 'bottom left',
+				at: 'top right',
+				viewport: $(window)
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
 		});
 		
+							
 		// recurrency
 		$('[name = jqcal_event_create_recurrency]').click(function() {
 			if($(this).is(':checked')) {
@@ -2013,10 +2017,12 @@ EventReadView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
+				my: 'bottom left',
+				at: 'top right',
+				viewport: $(window)
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
 		});
 		
@@ -2050,7 +2056,8 @@ EventReadView = Backbone.View.extend({
 			}
 			else {
 				$('.jqcal').data('plugin').removeDialogs();
-				this.model.remove();
+				var days = this.model.remove();
+				$('.jqcal').data('planning').get('view').parse_days(days);
 			}
 		}
 		else if(action == 'close') {
@@ -2116,10 +2123,12 @@ EventEditView = Backbone.View.extend({
 				hide: false,
 				position: {
 					container: this.$el,
-					corner: {
-						target: 'topRight',
-						tooltip: 'bottomLeft'
-					}
+					my: 'center',
+					at: 'center',
+					viewport: $(window)
+				},
+				style: {
+					classes: 'ui-tooltip-shadow ui-tooltip-light'
 				}
 			});
 		}
@@ -2132,9 +2141,10 @@ EventEditView = Backbone.View.extend({
 			}).offset($('.jqcal').offset()).html(template);
 		}
 		
+		
 		// set the select on the right agenda
-		if(this.model.get('agenda')) {
-			$('[name = jqcal_event_edit_agenda]').val(this.model.get('agenda'));
+		if(self.model.get('agenda')) {
+			$('[name = jqcal_event_edit_agenda]').val(self.model.get('agenda'));
 		}
 		
 		// activate the color picker
@@ -2143,7 +2153,7 @@ EventEditView = Backbone.View.extend({
 			title: 'Pick a color.'
 		});
 		$('#jquery-colour-picker').css('zIndex', 15001);
-		var color = this.model.get('color') ? this.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
+		var color = self.model.get('color') ? self.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
 		$('[name = jqcal_event_edit_color]').val(color).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
 		
 		// link agenda & color
@@ -2153,14 +2163,13 @@ EventEditView = Backbone.View.extend({
 		
 		// recurrency
 		$('[name = jqcal_event_edit_recurrency]').click(function() {
-			if($(this).is(':checked')) {
+			if($(self).is(':checked')) {
 				new RecurrencyView({
 					el: $('#jqcal_recurrency')
 				});
 			}
 		});
 		
-		var self = this;
 		_.each(jqcal.event, function(attribute) {
 			if(attribute.type == 'radio') {
 				$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
@@ -2170,11 +2179,11 @@ EventEditView = Backbone.View.extend({
 			}
 		});
 		
-		if(this.model.get('recurrency')) {
-			$('[name = jqcal_event_edit_recurrency]').attr('checked', 'checked').val(JSON.stringify(this.model.get('recurrency')));
+		if(self.model.get('recurrency')) {
+			$('[name = jqcal_event_edit_recurrency]').attr('checked', 'checked').val(JSON.stringify(self.model.get('recurrency')));
 		}
 		
-		if(this.model.get('is_occurrence')) {
+		if(self.model.get('is_occurrence')) {
 			$('[name = jqcal_event_edit_recurrency]').hide();
 		}
 	},
@@ -2195,8 +2204,8 @@ EventEditView = Backbone.View.extend({
 				this.model.unbindTimeslots();
 				
 				var object = {
-					starts_at: starts_at.getTime() - getLocalTimezoneOffset() + plugin.get('timezone_offset'),
-					ends_at: ends_at.getTime() - getLocalTimezoneOffset() + plugin.get('timezone_offset'),
+					starts_at: starts_at.getTime() - jqcal.time.getLocalTimezoneOffset() + plugin.get('timezone_offset'),
+					ends_at: ends_at.getTime() - jqcal.time.getLocalTimezoneOffset() + plugin.get('timezone_offset'),
 					label: $('[name = jqcal_event_edit_label]').val() || 'untitled',
 					description: $('[name = jqcal_event_edit_description]').val(),
 					agenda: $('[name = jqcal_event_edit_agenda]').val(),
@@ -2272,10 +2281,12 @@ EventDeleteView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'center',
-					tooltip: 'center'
-				}
+				my: 'bottom left',
+				viewport: $(window),
+				at: 'top right'
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
 		});
 	},
@@ -2308,6 +2319,7 @@ EventDeleteView = Backbone.View.extend({
 					break;
 			}
 			$('.jqcal').data('plugin').removeDialogs();
+			$('.jqcal').data('planning').get('view').parse_days(days);
 		}
 		else if(action == 'cancel') {
 			$('.jqcal').data('plugin').removeDialogs();
@@ -2351,13 +2363,16 @@ AgendaCreateView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
+				my: 'bottom left',
+				viewport: $(window),
+				at: 'top right'
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
 		});
 		
+							
 		// activate the color picker
 		$('[name = jqcal_agenda_create_color]').colourPicker({
 			ico: './dependencies/jquery.colourPicker.gif',
@@ -2467,13 +2482,16 @@ AgendaReadView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'topRight',
-					tooltip: 'bottomLeft'
-				}
+				my: 'bottom left',
+				viewport: $(window),
+				at: 'top right'
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
 		});
 		
+							
 		// apply the permissions
 		if(_.indexOf(plugin.get('no_perm_agenda'), 'edit') != -1) {
 			$('#jqcal_agenda_read_edit').remove();
@@ -2546,10 +2564,39 @@ AgendaEditView = Backbone.View.extend({
 				hide: false,
 				position: {
 					container: this.$el,
-					corner: {
-						target: 'topRight',
-						tooltip: 'bottomLeft'
-					}
+					my: 'bottom left',
+					viewport: $(window),
+					at: 'top right'
+				},
+				style: {
+					classes: 'ui-tooltip-shadow ui-tooltip-light'
+				}
+			});
+			
+			// activate the color picker
+			$('[name = jqcal_agenda_edit_color]').colourPicker({
+				ico: './dependencies/jquery.colourPicker.gif',
+				title: 'Pick a color.'
+			});
+			$('#jquery-colour-picker').css('zIndex', 15001);
+			$('[name = jqcal_agenda_edit_color]').val(self.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
+			
+			// set the transparency_past checkbox
+			if(self.model.get('transparency_past')) {
+				$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
+			}
+			
+			// set the transparency_recurrency checkbox
+			if(self.model.get('transparency_recurrency')) {
+				$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
+			}
+			
+			_.each(jqcal.agenda, function(attribute) {
+				if(attribute.type == 'radio') {
+					$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
+				}
+				else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
+					$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
 				}
 			});
 		}
@@ -2561,34 +2608,6 @@ AgendaEditView = Backbone.View.extend({
 				height: $('.jqcal').height()
 			}).offset($('.jqcal').offset()).html(template);
 		}
-		
-		// activate the color picker
-		$('[name = jqcal_agenda_edit_color]').colourPicker({
-			ico: './dependencies/jquery.colourPicker.gif',
-			title: 'Pick a color.'
-		});
-		$('#jquery-colour-picker').css('zIndex', 15001);
-		$('[name = jqcal_agenda_edit_color]').val(this.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
-		
-		// set the transparency_past checkbox
-		if(this.model.get('transparency_past')) {
-			$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
-		}
-		
-		// set the transparency_recurrency checkbox
-		if(this.model.get('transparency_recurrency')) {
-			$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
-		}
-		
-		var self = this;
-		_.each(jqcal.agenda, function(attribute) {
-			if(attribute.type == 'radio') {
-				$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
-			}
-			else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
-				$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
-			}
-		});
 	},
 	events: {
 		'click button': 'button'
@@ -2654,7 +2673,7 @@ RecurrencyView = Backbone.View.extend({
 	render: function() {
 		// instantiate the template
 		var template = jqcal.templates.recurrency({});
-	
+		var self = this;
 		// create the qtip window
 		$('.jqcal').qtip({
 			content: {
@@ -2670,12 +2689,14 @@ RecurrencyView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				corner: {
-					target: 'center',
-					tooltip: 'center'
-				}
+				my: 'center',
+				at: 'center',
+				viewport: $(window)
+			},
+			style: {
+				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
-		});
+		});	
 		
 		$('#jqcal_recurrency_type').change(function() {
 			switch($(this).val()) {

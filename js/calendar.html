@@ -7,9 +7,10 @@
 	<script type="text/javascript" src="./dependencies/underscore-min.js"></script>
 	<script type="text/javascript" src="./dependencies/backbone-min.js"></script>
 	<script type="text/javascript" src="./dependencies/handlebars-1.0.0.beta.6.js"></script>
-	<script type="text/javascript" src="./dependencies/jquery.qtip-1.0.0-rc3.min.js"></script>
+	<script type="text/javascript" src="./dependencies/jquery.qtip.min.js"></script>
 	<script type="text/javascript" src="./dependencies/jquery.colourPicker.js"></script>
 	<link rel=StyleSheet href="./dependencies/jquery.colourPicker.css">
+	<link rel=StyleSheet href="./dependencies/jquery.qtip.min.css">
 	<script type="text/javascript" src="./jquery.calendar.js"></script>
 	<script type="text/javascript" src="./models.js"></script>
 	<script type="text/javascript" src="./collections.js"></script>
@@ -71,7 +72,7 @@
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
 			no_perm_event	: ['edit', 'create', 'delete', 'read'],*/
-			edit_dialog		: false,
+			edit_dialog		: true,
 			calendar_ends_at: $.now() + 365*24*60*60*1000,
 			date_format		: 'Y-m-d D',
 			day_starts_at	: 8,

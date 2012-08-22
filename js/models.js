@@ -332,13 +332,17 @@ Event = Backbone.Model.extend({
 			_.each(planning.get('days').models, function(day){
 				day.get('daySlot').get('events').remove(self);
 			});
+			this.get('view').remove();
+			this.collection.remove(this);
+			return [];
 		}
 		else {
 			$('.' + this.cid).remove();
-			this.unbindTimeslots();
+			var toRender = this.unbindTimeslots();
+			this.get('view').remove();
+			this.collection.remove(this);
+			return toRender;
 		}
-		this.get('view').remove();
-		this.collection.remove(this);
 	},
 	removeView: function() {
 		this.unbindTimeslots();
