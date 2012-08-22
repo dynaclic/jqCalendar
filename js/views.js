@@ -2924,51 +2924,12 @@ RecurrencyView = Backbone.View.extend({
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
 			}
-		});	
-		
-		$('#jqcal_recurrency_type').change(function() {
-			switch($(this).val()) {
-				case 'daily':
-				case 'yearly':
-					$('#jqcal_recurrency_when_weekly, #jqcal_recurrency_when_monthly').html('');
-					break;
-				case 'weekly':
-					var plugin = $('.jqcal').data('plugin');
-					var minDays = jqcal.dates.minDays;
-					$('#jqcal_recurrency_when_weekly').html('When:<br />');
-					for(var i=0; i<7; i++) {
-						$('#jqcal_recurrency_when_weekly').append('<input type="checkbox" name="jqcal_recurrency_when_weekly" value="'+i+'" checked="checked" /><label>'+minDays[i]+'</label>');
-					}
-					$('#jqcal_recurrency_when_monthly').html('');
-					break;
-				case 'monthly':
-					$('#jqcal_recurrency_when_weekly').html('');
-					$('#jqcal_recurrency_when_monthly').html('When:<br />'+
-						'<input type="radio" name="jqcal_recurrency_when_monthly" value="week_day" /><label>Day of the week</label><br />'+
-						'<input type="radio" name="jqcal_recurrency_when_monthly" value="month_day" checked="checked" /><label>Day of the month</label>');
-					break;
-			}
-		});
-		
-		$('[name = jqcal_recurrency_end]').click(function() {
-			switch($(this).val()) {
-				case 'never':
-					$('#jqcal_recurrency_on_date').attr('disabled', 'disabled');
-					$('#jqcal_recurrency_after_number').attr('disabled', 'disabled');
-					break;
-				case 'on':
-					$('#jqcal_recurrency_on_date').removeAttr('disabled');
-					$('#jqcal_recurrency_after_number').attr('disabled', 'disabled');
-					break;
-				case 'after':
-					$('#jqcal_recurrency_on_date').attr('disabled', 'disabled');
-					$('#jqcal_recurrency_after_number').removeAttr('disabled');
-					break;
-			}
 		});
 	},
 	events: {
-		'click button': 'button'
+		'click button': 'button',
+		'click #jqcal_recurrency_type': 'recurrency_type',
+		'change [name = jqcal_recurrency_end]': 'recurrency_end'
 	},
 	button: function(e) {
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
@@ -3018,6 +2979,45 @@ RecurrencyView = Backbone.View.extend({
 		else if(action == 'cancel') {
 			$('.jqcal').qtip('destroy');
 			this.$el.data('view', '');
+		}
+	},
+	recurrency_type: function() {
+		switch($('#jqcal_recurrency_type').val()) {
+			case 'daily':
+			case 'yearly':
+				$('#jqcal_recurrency_when_weekly, #jqcal_recurrency_when_monthly').html('');
+				break;
+			case 'weekly':
+				var plugin = $('.jqcal').data('plugin');
+				var minDays = jqcal.dates.minDays;
+				$('#jqcal_recurrency_when_weekly').html('When:<br />');
+				for(var i=0; i<7; i++) {
+					$('#jqcal_recurrency_when_weekly').append('<input type="checkbox" name="jqcal_recurrency_when_weekly" value="'+i+'" checked="checked" /><label>'+minDays[i]+'</label>');
+				}
+				$('#jqcal_recurrency_when_monthly').html('');
+				break;
+			case 'monthly':
+				$('#jqcal_recurrency_when_weekly').html('');
+				$('#jqcal_recurrency_when_monthly').html('When:<br />'+
+					'<input type="radio" name="jqcal_recurrency_when_monthly" value="week_day" /><label>Day of the week</label><br />'+
+					'<input type="radio" name="jqcal_recurrency_when_monthly" value="month_day" checked="checked" /><label>Day of the month</label>');
+				break;
+		}
+	},
+	recurrency_end: function() {
+		switch($('[name = jqcal_recurrency_end]:checked').val()) {
+			case 'never':
+				$('#jqcal_recurrency_on_date').attr('disabled', 'disabled');
+				$('#jqcal_recurrency_after_number').attr('disabled', 'disabled');
+				break;
+			case 'on':
+				$('#jqcal_recurrency_on_date').removeAttr('disabled');
+				$('#jqcal_recurrency_after_number').attr('disabled', 'disabled');
+				break;
+			case 'after':
+				$('#jqcal_recurrency_on_date').attr('disabled', 'disabled');
+				$('#jqcal_recurrency_after_number').removeAttr('disabled');
+				break;
 		}
 	}
 });
