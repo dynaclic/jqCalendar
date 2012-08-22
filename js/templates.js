@@ -38,8 +38,8 @@ jqcal.templates = {
 			'</tbody>'+
 		'</table>'+
 		'<br />'+
-		'<div id="jqcal_div_dayslots">'+
-			'<table id="jqcal_dayslots" column_width={{width}} style = "width: {{total_width}}px; margin-left: {{hours_width}}px;">'+
+		'<div id="jqcal_div_fulltimeslots">'+
+			'<table id="jqcal_fulltimeslots" column_width={{width}} style = "width: {{total_width}}px; margin-left: {{hours_width}}px;">'+
 				'<tbody>'+
 					'<tr></tr>'+
 				'</tbody>'+
@@ -62,7 +62,7 @@ jqcal.templates = {
 	day: 
 		'{{title}}'
 	,
-	daySlot: 
+	fullTimeSlot: 
 		''
 	,
 	timeSlot: 

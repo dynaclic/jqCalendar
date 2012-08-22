@@ -248,7 +248,7 @@ PlanningView = Backbone.View.extend({
 		var max = 0;
 		//z index = 0
 		_.each(this.model.get('days').models, function(day) {
-			events = day.get('daySlot').get('events').models;
+			events = day.get('fullTimeSlot').get('events').models;
 			all_events = _.union(all_events, events);
 			max = events.length > max ? events.length : max;
 			for(var e in events){
@@ -264,7 +264,7 @@ PlanningView = Backbone.View.extend({
 		
 		//determine z_index of each event
 		_.each(this.model.get('days').models, function(day){
-			events = day.get('daySlot').get('events').models;
+			events = day.get('fullTimeSlot').get('events').models;
 		
 			var new_events = _.filter(events, function(event){
 				return event.get('view').$el.css('zIndex') == 'auto' || event.get('view').$el.css('zIndex') == '0' || event.get('view').$el.css('zIndex') == 0;
@@ -306,12 +306,12 @@ PlanningView = Backbone.View.extend({
 		});
 
 		//initial values (based on #jqcal_days)
-		$('#jqcal_dayslots').height($('#jqcal_days').height());
-		var pos_top_init = $('#jqcal_dayslots').offset().top;
-		var height_init = $('#jqcal_dayslots').outerHeight() - 10;
+		$('#jqcal_fulltimeslots').height($('#jqcal_days').height());
+		var pos_top_init = $('#jqcal_fulltimeslots').offset().top;
+		var height_init = $('#jqcal_fulltimeslots').outerHeight() - 10;
 		
 		//height
-		$('#jqcal_dayslots').height(max * height_init + 20);
+		$('#jqcal_fulltimeslots').height(max * height_init + 20);
 		
 		//place the events according to their z_index
 		for(var e in all_events){
@@ -553,11 +553,11 @@ DayView = Backbone.View.extend({
 		this.$el.append(template);
 		$('#jqcal_days tr').append(this.$el);
 		
-		// instantiate the daySlot view
-		var view = new DaySlotView({
-			model: this.model.get('daySlot')
+		// instantiate the fullTimeSlot view
+		var view = new FullTimeSlotView({
+			model: this.model.get('fullTimeSlot')
 		});
-		this.model.get('daySlot').set('view', view);
+		this.model.get('fullTimeSlot').set('view', view);
 		
 		// instantiate the timeSlot views
 		_.each(this.model.get('timeSlots').models, function(timeSlot) {
@@ -569,7 +569,7 @@ DayView = Backbone.View.extend({
 	}
 });
 
-DaySlotView = Backbone.View.extend({
+FullTimeSlotView = Backbone.View.extend({
 	tagName: 'td',
 	initialize: function() {
 		this.$el.attr({
@@ -580,11 +580,11 @@ DaySlotView = Backbone.View.extend({
 	},
 	render: function() {
 		// instantiate the template
-		var template = jqcal.templates.daySlot({});
+		var template = jqcal.templates.fullTimeSlot({});
 		
 		// display the view
 		this.$el.append(template);
-		$('#jqcal_dayslots tbody tr').append(this.$el);
+		$('#jqcal_fulltimeslots tbody tr').append(this.$el);
 	},
 	events: {
 		'mousedown': 'createEvent'
@@ -820,11 +820,11 @@ EventView = Backbone.View.extend({
 		var planning = $('.jqcal').data('planning');
 		
 		
-		// unbind this event from the dayslots
+		// unbind this event from the fulltimeslots
 		if(this.model.get('fullDay')){
 			var this_model = this.model;
 			_.each(planning.get('days').models, function(day){
-				day.get('daySlot').get('events').remove(this_model);
+				day.get('fullTimeSlot').get('events').remove(this_model);
 			});
 		}
 		
@@ -833,13 +833,13 @@ EventView = Backbone.View.extend({
 		if(day) {
 			if(this.model.get('fullDay')){
 				this.setTemplate();
-				if(! this.model.get('daySlot_view')) {
+				if(! this.model.get('fullTimeSlot_view')) {
 					// search for the timeSlot container
-					var daySlot_view = day.get('daySlot').get('view');
+					var fullTimeSlot_view = day.get('fullTimeSlot').get('view');
 					// store the timeSlot_view inside the Event		
-					this.model.set('daySlot_view', daySlot_view);
+					this.model.set('fullTimeSlot_view', fullTimeSlot_view);
 					// display the view
-					$('#jqcal_div_dayslots').append(this.$el);
+					$('#jqcal_div_fulltimeslots').append(this.$el);
 				}
 			}
 			else {
@@ -993,8 +993,8 @@ EventView = Backbone.View.extend({
 			}
 		}
 		
-		// for the full day events (#jqcal_dayslots)
-		if(daySlot_view = this.model.get('daySlot_view')) {
+		// for the full day events (#jqcal_fulltimeslots)
+		if(fullTimeSlot_view = this.model.get('fullTimeSlot_view')) {
 			var toDisplay = [];
 			var i = _.indexOf(planning.get('days').models, day);
 
@@ -1016,17 +1016,17 @@ EventView = Backbone.View.extend({
 			var event_height = $('#jqcal_days').outerHeight() - 10;
 			
 			//width
-			var event_width = toDisplay.length * (daySlot_view.$el.width() +4) - 10;
+			var event_width = toDisplay.length * (fullTimeSlot_view.$el.width() +4) - 10;
 			
 			//offset
 			var offset = {
-				top: daySlot_view.$el.offset().top,
-				left: daySlot_view.$el.offset().left
+				top: fullTimeSlot_view.$el.offset().top,
+				left: fullTimeSlot_view.$el.offset().left
 			};
 			
 			for(var d in toDisplay){
-				if(!toDisplay[d].get('daySlot').get('events').getByCid(this.model.cid)){
-					toDisplay[d].get('daySlot').get('events').push(this.model);
+				if(!toDisplay[d].get('fullTimeSlot').get('events').getByCid(this.model.cid)){
+					toDisplay[d].get('fullTimeSlot').get('events').push(this.model);
 				}
 			}
 		
@@ -1060,12 +1060,12 @@ EventView = Backbone.View.extend({
 		// two different methods for events and full day events
 		if(this.model.get('fullDay')){
 			var scroll = $(window).scrollTop();
-			var pos_table = $('#jqcal_dayslots').position();
-			var margin_left_table = parseInt($('#jqcal_dayslots').css('margin-left'));
-			var width = $('#jqcal_dayslots').attr('column_width');
+			var pos_table = $('#jqcal_fulltimeslots').position();
+			var margin_left_table = parseInt($('#jqcal_fulltimeslots').css('margin-left'));
+			var width = $('#jqcal_fulltimeslots').attr('column_width');
 			var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
-			var result = $('#jqcal_dayslots>tbody>:nth-child('+1+')>:nth-child('+(grille_x+1)+')');
-			var result = $('#jqcal_dayslots>tbody>:first-child>:nth-child('+(grille_x+1)+')');
+			var result = $('#jqcal_fulltimeslots>tbody>:nth-child('+1+')>:nth-child('+(grille_x+1)+')');
+			var result = $('#jqcal_fulltimeslots>tbody>:first-child>:nth-child('+(grille_x+1)+')');
 			return result;
 		}else {
 			var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
@@ -1958,7 +1958,7 @@ EventCreateView = Backbone.View.extend({
 			if(this.model.get('fullDay')){
 				var this_model = this.model;
 				_.each($('.jqcal').data('planning').get('days').models, function(day){
-					day.get('daySlot').get('events').remove(this_model);
+					day.get('fullTimeSlot').get('events').remove(this_model);
 				});
 				$('.jqcal').data('planning').get('view').parse_full_day();
 			}
@@ -2044,7 +2044,7 @@ EventReadView = Backbone.View.extend({
 			if(this.model.get('fullDay')){
 				var this_model = this.model;
 				_.each($('.jqcal').data('planning').get('days').models, function(day){
-					day.get('daySlot').get('events').remove(this_model);
+					day.get('fullTimeSlot').get('events').remove(this_model);
 				});
 				$('.jqcal').data('planning').get('view').parse_full_day();
 			}

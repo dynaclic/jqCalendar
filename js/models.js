@@ -121,8 +121,8 @@ Day = Backbone.Model.extend({
 			collection.add(timeSlot);
 		}
 		
-		// instantiate the daySlot
-		var daySlot = new DaySlot({
+		// instantiate the fullTimeSlot
+		var fullTimeSlot = new FullTimeSlot({
 			starts_at: this.get('date'),
 			ends_at: jqcal.time.addHours(this.get('date'), 24)
 		});
@@ -130,12 +130,12 @@ Day = Backbone.Model.extend({
 		//  set the attributes
 		this.set({
 			timeSlots: collection,
-			daySlot: daySlot
+			fullTimeSlot: fullTimeSlot
 		});
 	}
 });
 
-DaySlot = Backbone.Model.extend({
+FullTimeSlot = Backbone.Model.extend({
 	initialize: function() {
 		this.set({
 			events: new Events
@@ -326,11 +326,11 @@ Event = Backbone.Model.extend({
 		}
 		$('.jqcal').data('plugin').get('event_removed')(event);
 		
-		// unbind this event from the dayslots
+		// unbind this event from the fulltimeslots
 		if(this.get('fullDay')){
 			var self = this;
 			_.each(planning.get('days').models, function(day){
-				day.get('daySlot').get('events').remove(self);
+				day.get('fullTimeSlot').get('events').remove(self);
 			});
 			this.get('view').remove();
 			this.collection.remove(this);
@@ -347,7 +347,7 @@ Event = Backbone.Model.extend({
 	removeView: function() {
 		this.unbindTimeslots();
 		this.unset('timeSlot_view');
-		this.unset('daySlot_view');
+		this.unset('fullTimeSlot_view');
 		var children = this.get('children').models;
 		for(var c in children){
 				children[c].removeView();
@@ -480,7 +480,7 @@ Event = Backbone.Model.extend({
 	},
 	onChange: function() {
 		var event = this.changedAttributes();
-		_.each(['id', 'view', 'timeSlot_view', 'daySlot_view'], function(attribute) {
+		_.each(['id', 'view', 'timeSlot_view', 'fullTimeSlot_view'], function(attribute) {
 			delete event[attribute];
 		});
 		if(_.keys(event).length) {

@@ -2,8 +2,8 @@ var Days = Backbone.Collection.extend({
 	model: Day
 });
 
-var DaySlots = Backbone.Collection.extend({
-	model : DaySlot
+var FullTimeSlots = Backbone.Collection.extend({
+	model : FullTimeSlot
 });
 
 var TimeSlots = Backbone.Collection.extend({

@@ -228,7 +228,7 @@ var jqcal = new function() {
 					var column_width = Math.floor(calendar_size/nb_days_displayed);
 					var total_width = nb_days_displayed*column_width + 1;// table = tbody + 1 pour chrome et ff //
 					
-					var tableToChange = $('#jqcal_days, #jqcal_dayslots, #jqcal_timeslots');
+					var tableToChange = $('#jqcal_days, #jqcal_fulltimeslots, #jqcal_timeslots');
 					tableToChange.width(total_width);
 					tableToChange.attr('column_width', column_width);
 					
@@ -238,7 +238,7 @@ var jqcal = new function() {
 					_.each(agendas.models, function(agenda) {
 						if(agenda.get('display')) {
 							_.each(agenda.get('events').models, function(event) {
-								if(event.get('timeSlot_view') || event.get('daySlot_view')) {
+								if(event.get('timeSlot_view') || event.get('fullTimeSlot_view')) {
 									event.unbindTimeslots();
 									event.get('view').render();
 									event.bindTimeslots();
