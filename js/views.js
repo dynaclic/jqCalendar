@@ -1305,7 +1305,9 @@ EventView = Backbone.View.extend({
 		
 		// callback
 		var event = {
-			cid: this.model.cid
+			cid: this.model.cid,
+			starts_at: this.get('starts_at'),
+			ends_at: this.get('ends_at')
 		};
 		if(this.model.get('id')) {
 			event.id = this.model.get('id');
@@ -1356,7 +1358,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
@@ -1399,7 +1403,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
@@ -1563,7 +1569,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
@@ -1618,7 +1626,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
@@ -1666,7 +1676,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
@@ -1714,7 +1726,9 @@ EventView = Backbone.View.extend({
 			
 			// callback
 			var event = {
-				cid: self.model.cid
+				cid: self.model.cid,
+				starts_at: self.get('starts_at'),
+				ends_at: self.get('ends_at')
 			};
 			if(self.model.get('id')) {
 				event.id = self.model.get('id');
