@@ -76,33 +76,54 @@ Planning = Backbone.Model.extend({
 	setCollection: function() {
 		// get the plugin
 		var plugin = $('.jqcal').data('plugin');
-	
-		// instantiate the collection of days
-		var collection = new Days();
-		switch(this.get('format')) {
-			case 'day':
-				var nb_days = 1;
-				break;
-			case 'custom':
-				var nb_days = this.get('nb_days');
-				break;
-			case 'week':
-				var nb_days = 7;
-				break;
-		}
-		for(var i = 0; i < nb_days; i++) {
-			var date = jqcal.time.addDays(this.get('starts_at'), i);
-			
-			if((this.get('format') != 'week') || (_.indexOf(plugin.get('hidden_days'), jqcal.time.timestampToDay(date, plugin.get('timezone_offset'))) == -1)) {
-				var day = new Day({
-					date: date
-				});
-				collection.models.push(day);
-			}
-		}
 		
-		// set the collection
-		this.set('days', collection);
+		if(this.get('format') == 'month') {
+			// get the number of weeks
+			var month1 = (new Date(jqcal.time.addDays(this.get('starts_at'), 7))).getMonth();
+			var nb_weeks = 1;
+			while((new Date(jqcal.time.addDays(this.get('starts_at'), 7 * (nb_weeks)))).getMonth() == month1) {
+				nb_weeks++;
+			}
+			
+			// instantiate the collection of weeks
+			var collection = new Weeks();
+			for(var i = 0; i < nb_weeks; i++) {
+				var date = jqcal.time.addDays(this.get('starts_at'), i*7);
+				collection.add(new Week({
+					date: date
+				}));
+			}
+			
+			// set the collection
+			this.set('weeks', collection);
+		}
+		else {
+			// instantiate the collection of days
+			var collection = new Days();
+			switch(this.get('format')) {
+				case 'day':
+					var nb_days = 1;
+					break;
+				case 'custom':
+					var nb_days = this.get('nb_days');
+					break;
+				case 'week':
+					var nb_days = 7;
+					break;
+			}
+			for(var i = 0; i < nb_days; i++) {
+				var date = jqcal.time.addDays(this.get('starts_at'), i);
+				
+				if((this.get('format') != 'week') || (_.indexOf(plugin.get('hidden_days'), jqcal.time.timestampToDay(date, plugin.get('timezone_offset'))) == -1)) {
+					collection.add(new Day({
+						date: date
+					}));
+				}
+			}
+			
+			// set the collection
+			this.set('days', collection);
+		}
 	}
 });
 
@@ -144,9 +165,32 @@ FullTimeSlot = Backbone.Model.extend({
 });
 
 TimeSlot = Backbone.Model.extend({
-	defaults: {
-		events: []
-	},
+	initialize: function() {
+		this.set({
+			events: new Events
+		});
+	}
+});
+
+Week = Backbone.Model.extend({
+	initialize: function() {
+		// instantiate the collection of timeSlots
+		var collection = new DaySlots();
+		for(var i = 0; i < 7; i++) {
+			collection.add(new DaySlot({
+				starts_at: jqcal.time.addDays(this.get('date'), i),
+				ends_at: jqcal.time.addDays(this.get('date'), i+1)
+			}));
+		}
+		
+		//  set the attributes
+		this.set({
+			daySlots: collection
+		});
+	}
+});
+
+DaySlot = Backbone.Model.extend({
 	initialize: function() {
 		this.set({
 			events: new Events
@@ -622,7 +666,6 @@ Event = Backbone.Model.extend({
 		}
 	}
 });
-
 
 EventExtended = Event.extend({
 	removeView: function() {
