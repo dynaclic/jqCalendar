@@ -160,9 +160,9 @@ jqcal.templates = {
 		'<button id="jqcal_agenda_create_cancel">Cancel</button>'
 	,
 	agenda_read: 
-		'{{label}}<br />'+
-		'{{description}}'+
-		'<div class="jqcal_agenda_read_button" style="width:15px; height:15px; border: 1px solid black; background-color:{{color}};"></div>'+
+		'Label: {{label}}<br />'+
+		'Description: {{description}}<br />'+
+		'Color: <div class="jqcal_agenda_read_button" style="width:15px; height:15px; border: 1px solid black; background-color:{{color}}; display: inline-block;"></div><br />'+
 		'Opacity for past events: {{transparency_past}}<br />'+
 		'Opacity for occurrences: {{transparency_recurrency}}<br />'+
 		'<button id="jqcal_agenda_read_delete">Delete</button>'+
