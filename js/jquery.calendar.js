@@ -92,7 +92,7 @@ var jqcal = new function() {
 			return date.getUTCFullYear()+'/'+(date.getUTCMonth()+1)+'/'+date.getUTCDate();
 		},
 
-		// convert a timestamp to a day (format: dd)
+		// convert a timestamp to a day (format: d?d)
 		timestampToMonthDay: function(timestamp, offset) {
 			return (new Date(timestamp - offset * 60000)).getUTCDate();
 		},
@@ -330,6 +330,40 @@ var jqcal = new function() {
 				}
 			});
 			return this;
+		},
+		changeByIds: function(ids) {
+			var agendas = $('.jqcal').data('agendas');
+			_.each(ids, function(values, id) {
+				var model;
+				if(model = agendas.get(id)) {
+					model.set(values, {silent: true});
+				}
+				else {
+					for(var i = 0; i < agendas.length; i++) {
+						if(model = agendas.models[i].get('events').get(id)) {
+							model.set(values, {silent: true});
+							break;
+						}
+					}
+				}
+			});
+		},
+		changeByCids: function(cids) {
+			var agendas = $('.jqcal').data('agendas');
+			_.each(cids, function(values, cid) {
+				var model;
+				if(model = agendas.getByCid(cid)) {
+					model.set(values);
+				}
+				else {
+					for(var i = 0; i < agendas.length; i++) {
+						if(model = agendas.models[i].get('events').getByCid(cid)) {
+							model.set(values);
+							break;
+						}
+					}
+				}
+			});
 		},
 		removeByIds: function(ids) {
 			var agendas = $('.jqcal').data('agendas');

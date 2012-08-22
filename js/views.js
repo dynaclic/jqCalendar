@@ -213,11 +213,14 @@ PlanningView = Backbone.View.extend({
 				//-----affichage------- 
 				var nb_days_displayed = 7;
 				switch(this.model.get('format')) {
-					case 'day': nb_days_displayed = 1;
+					case 'day':
+						nb_days_displayed = 1;
 						break;
-					case 'custom_day': nb_days_displayed = this.model.get('nb_days');
+					case 'custom_day':
+						nb_days_displayed = this.model.get('nb_days');
 						break;
-					case 'week': nb_days_displayed = 7 - plugin.get('hidden_days').length;
+					case 'week':
+						nb_days_displayed = 7 - plugin.get('hidden_days').length;
 						break;
 					default: nb_days_displayed = 7;
 				}
@@ -316,6 +319,24 @@ PlanningView = Backbone.View.extend({
 		
 		// adjust the datepicker
 		$('#jqcal_datepicker').datepicker('setDate', new Date(this.model.get('starts_at')));
+		
+		// adjust the period displayed
+		var period = jqcal.time.timestampToFormat(this.model.get('starts_at'), plugin.get('timezone_offset'), plugin.get('date_format'));
+		switch(this.model.get('format')) {
+			case 'day':
+				break;
+			case 'custom_day':
+			case 'week':
+				period += ' - ';
+				period += jqcal.time.timestampToFormat(jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length - 1), plugin.get('timezone_offset'), plugin.get('date_format'));
+				break;
+			case 'custom_week':
+			case 'month':
+				period += ' - ';
+				period += jqcal.time.timestampToFormat(jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length * 7 - 1), plugin.get('timezone_offset'), plugin.get('date_format'));
+				break;
+		}
+		$('#jqcal_planning_period').html(period);
 	},
 	parse_full_day: function() { // browse each day to determine the position of the events inside (for full day events)
 		var all_events = [];
