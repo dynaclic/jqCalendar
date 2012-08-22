@@ -10,6 +10,14 @@ var TimeSlots = Backbone.Collection.extend({
 	model : TimeSlot
 });
 
+var Weeks = Backbone.Collection.extend({
+	model : Week
+});
+
+var DaySlots = Backbone.Collection.extend({
+	model : DaySlot
+});
+
 var Agendas = Backbone.Collection.extend({
 	model: Agenda
 });

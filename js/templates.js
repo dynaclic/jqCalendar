@@ -9,6 +9,7 @@ jqcal.templates = {
 				'<input type="radio" id="jqcal_toDay" name="jqcal_planning_format" value="day" /><label for="jqcal_toDay">Day</label>'+
 				'<input type="radio" id="jqcal_toCustom" name="jqcal_planning_format" value="custom" /><label for="jqcal_toCustom">Custom</label>'+
 				'<input type="radio" id="jqcal_toWeek" name="jqcal_planning_format" value="week" /><label for="jqcal_toWeek">Week</label>'+
+				'<input type="radio" id="jqcal_toMonth" name="jqcal_planning_format" value="month" /><label for="jqcal_toMonth">Month</label>'+
 			'</span><span">'+
 				'Days: <select id="jqcal_nb_days_select">'+
 				'{{#select}}<option value={{value}}>{{value}}</option>{{/select}}'+
@@ -59,6 +60,20 @@ jqcal.templates = {
 			'</table>'+
 		'</div>'
 	,
+	planning_month:
+		'<table id="jqcal_days" column_width={{width}} style = "width: {{total_width}}px;">'+
+			'<tbody>'+
+				'<tr></tr>'+
+			'</tbody>'+
+		'</table>'+
+		'<br />'+
+		'<div id="jqcal_calendar_events" style="overflow-y: auto; height: 500px; position: relative;">'+
+			'<table id="jqcal_dayslots" column_width={{width}} style = "width: {{total_width}}px;">'+
+				'<tbody>'+
+				'</tbody>'+
+			'</table>'+
+		'</div>'
+	,
 	day: 
 		'{{title}}'
 	,
@@ -67,6 +82,12 @@ jqcal.templates = {
 	,
 	timeSlot: 
 		''
+	,
+	week:
+		''
+	,
+	daySlot:
+		'{{day}}'
 	,
 	agenda: 
 		'&nbsp;<div style="display: inline-block; border: 1px solid black; width:15px; height:15px; margin-top: 4px; background-color:{{color}}; "></div>'+

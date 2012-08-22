@@ -41,6 +41,16 @@ var jqcal = new function() {
 			return jqcal.time.addDays(jqcal.time.getDay(timestamp, plugin.get('timezone_offset')), -((((jqcal.time.timestampToDay(timestamp, plugin.get('timezone_offset')) - plugin.get('first_day'))%7)+7)%7)); // (-n)%7 = -(n%7) => ((-n)%7+7)%7 = n%7
 		},
 
+		// get day's month's timestamp for the given offset and the given first day of the week
+		// eg:
+		// offset = -120 && timestamp for 2012/08/22 11:30:00 GMT+2 (wednesday) (2012/07/31 09:30:00 UTC)
+		// shall return timestamp for 2012/07/30 00:00:00 GMT+2 (2012/07/29 22:00:00 UTC)
+		getMonth: function(timestamp, plugin) {
+			var date = new Date(timestamp);
+			date.setDate(1);
+			return jqcal.time.addDays(date.getTime(), (plugin.get('first_day') - date.getDay() + 6)%7 - 6);
+		},
+		
 		// add n years to the specified timestamp (here we use the Date object to avoid dealing with leap years)
 		addYears: function(timestamp, n) {
 			var date = new Date(timestamp);
@@ -82,6 +92,11 @@ var jqcal = new function() {
 			return date.getUTCFullYear()+'/'+(date.getUTCMonth()+1)+'/'+date.getUTCDate();
 		},
 
+		// convert a timestamp to a day (format: dd)
+		timestampToMonthDay: function(timestamp, offset) {
+			return (new Date(timestamp - offset * 60000)).getUTCDate();
+		},
+		
 		// convert a timestamp to a time (format: hh:mm)
 		timestampToTime: function(timestamp, offset) {
 			date = new Date(timestamp - offset * 60000); // 60000ms = 1min
@@ -122,11 +137,6 @@ var jqcal = new function() {
 				}
 			}
 			return string;
-		},
-
-		// return true if the two timestamps represent the same day, false otherwise
-		sameDay: function(timestamp1, timestamp2, offset) {
-			return jqcal.time.getDay(timestamp1, offset) == getDay(timestamp2, offset);
 		},
 
 		// return true if the event is to be displayed, false otherwise
