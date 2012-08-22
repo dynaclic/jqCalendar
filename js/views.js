@@ -11,7 +11,14 @@ PluginView = Backbone.View.extend({
 		var left_button = 200;
 		
 		var template = jqcal.templates.plugin({
-			select: [
+			select_days: [
+				{value: 2},
+				{value: 3},
+				{value: 4},
+				{value: 5},
+				{value: 6}
+			],
+			select_weeks: [
 				{value: 2},
 				{value: 3},
 				{value: 4},
@@ -58,14 +65,16 @@ PluginView = Backbone.View.extend({
 				// set the planning's starts_at
 				switch(planning.get('format')) {
 					case 'day':
-					case 'custom':
+					case 'custom_day':
 						var starts_at = (new Date(date)).getTime() - jqcal.time.getLocalTimezoneOffset() * 60000 + plugin.get('timezone_offset') * 60000;
 						break;
 					case 'week':
 						var starts_at = jqcal.time.getWeek((new Date(date)).getTime() - jqcal.time.getLocalTimezoneOffset() * 60000 + plugin.get('timezone_offset') * 60000, plugin);
 						break;
+					case 'custom_week':
 					case 'month':
 						var starts_at = jqcal.time.getMonth((new Date(date)).getTime() - jqcal.time.getLocalTimezoneOffset() * 60000 + plugin.get('timezone_offset') * 60000, plugin);
+						break;
 				}
 				$('.jqcal').data('planning').set('starts_at', starts_at);
 			}
@@ -78,6 +87,7 @@ PluginView = Backbone.View.extend({
 	},
 	events: {
 		'change #jqcal_nb_days_select': 'updateNbDays',
+		'change #jqcal_nb_weeks_select': 'updateNbWeeks',
 		'click #jqcal_prev_button': 'prev',
 		'click #jqcal_next_button': 'next',
 		'click #jqcal_today_button': 'today',
@@ -86,6 +96,9 @@ PluginView = Backbone.View.extend({
 	},
 	updateNbDays: function() {
 		$('.jqcal').data('planning').set('nb_days', $('#jqcal_nb_days_select').val());
+	},
+	updateNbWeeks: function() {
+		$('.jqcal').data('planning').set('nb_weeks', $('#jqcal_nb_weeks_select').val());
 	},
 	prev: function(e) {
 		e.preventDefault();
@@ -101,11 +114,14 @@ PluginView = Backbone.View.extend({
 			case 'day':
 				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign));
 				break;
-			case 'custom':
+			case 'custom_day':
 				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign*planning.get('nb_days')));
 				break;
 			case 'week':
 				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign*7));
+				break;
+			case 'custom_week':
+				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign*7*planning.get('nb_weeks')));
 				break;
 			case 'month':
 				planning.set('starts_at', jqcal.time.getMonth(jqcal.time.addDays(planning.get('starts_at'), 7 + sign*31), $('.jqcal').data('plugin')));
@@ -117,10 +133,11 @@ PluginView = Backbone.View.extend({
 		var planning = $('.jqcal').data('planning');
 		switch(planning.get('format')) {
 			case 'day':
-			case 'custom':
+			case 'custom_day':
 				planning.set('starts_at', jqcal.time.getToday(plugin.get('timezone_offset')));
 				break;
 			case 'week':
+			case 'custom_week':
 				planning.set('starts_at', jqcal.time.getWeek(jqcal.time.getToday(plugin.get('timezone_offset')), plugin));
 				break;
 			case 'month':
@@ -133,7 +150,7 @@ PluginView = Backbone.View.extend({
 		var planning = $('.jqcal').data('planning');
 		var new_format = $('[name = jqcal_planning_format]:checked').val();
 		planning.set('format', new_format);
-		if(new_format == 'week') {
+		if(new_format == 'week' || new_format == 'custom_week') {
 			planning.set('starts_at', jqcal.time.getWeek(planning.get('starts_at'), plugin));
 		}
 		else if(new_format == 'month') {
@@ -151,7 +168,7 @@ PlanningView = Backbone.View.extend({
 	initialize: function() {
 		// bind the model's onChange event to this.render
 		this.render = _.bind(this.render, this); 
-		this.model.bind('change:nb_days change:format change:starts_at', this.render);
+		this.model.bind('change:nb_days change:nb_weeks change:format change:starts_at', this.render);
 		
 		this.model.set('view', this);
 		
@@ -173,113 +190,128 @@ PlanningView = Backbone.View.extend({
 		$('#jqcal_to'+format).attr('checked', 'checked');
 		
 		// show/hide the select menu
-		if(format == 'Custom') {
+		if(format == 'Custom_day') {
 			$('#jqcal_nb_days_select').parent().show();
+			$('#jqcal_nb_weeks_select').parent().hide();
+		}
+		else if(format == 'Custom_week') {
+			$('#jqcal_nb_days_select').parent().hide();
+			$('#jqcal_nb_weeks_select').parent().show();
 		}
 		else {
 			$('#jqcal_nb_days_select').parent().hide();
+			$('#jqcal_nb_weeks_select').parent().hide();
 		}
 		
-		if(this.model.get('format') == 'month') {
-			//find the best fitting size for the calendar
-			var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100);
-			var column_width = Math.floor(calendar_size / 7);
-			var total_width = 7 * column_width + 1;
-			
-			// instantiate the template
-			var template = jqcal.templates.planning_month({
-				width: column_width,
-				total_width: total_width
-			});
-			
-			// display the view
-			this.$el.html(template);
-			
-			// fill the day names
-			var first_day = plugin.get('first_day');
-			for(var i = 0; i < 7; i++) {
-				$('#jqcal_days tr').append('<td>'+jqcal.dates.shortDays[(first_day + i)%7]+'</td>')
-			}
-			
-			// instantiate the week views
-			_.each(this.model.get('weeks').models, function(week) {
-				var week_view = new WeekView({
-					model: week
-				});
-			});
-		}
-		else {
-			// set the select days correctly
-			$('#jqcal_nb_days_select').val(this.model.get('nb_days'));
-			
-			//-----affichage------- 
-			var nb_days_displayed = 7;
-			switch(this.model.get('format')) {
-				case 'day': nb_days_displayed = 1;
-					break;
-				case 'custom': nb_days_displayed = this.model.get('nb_days');
-					break;
-				case 'week': nb_days_displayed = 7 - plugin.get('hidden_days').length;
-					break;
-				default: nb_days_displayed = 7;
-			}
-			
-			
-			//define #jqcal_hours width (the width of the displayed hours)
-			var hours_width = 50;
-
-			//find the best fitting size for the calendar
-			var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100 - hours_width);
-			var column_width = Math.floor(calendar_size/nb_days_displayed);
-			var total_width = nb_days_displayed*column_width + 1;
-			
-			//-------------
-		
-			// instantiate the template
-			var object = {rows: [], hours: [], width: column_width, total_width: (total_width), hours_width: hours_width, fix_ie7: []};
-			for(var i = 0; i < (plugin.get('day_ends_at') - plugin.get('day_starts_at')) * (1/plugin.get('day_fraction')); i++) {
-				object.rows.push({id: 'jqcal_row_'+i});
-				var hour = jqcal.time.addHours(this.model.get('starts_at'),(i*plugin.get('day_fraction') + plugin.get('day_starts_at')));
+		switch(this.model.get('format')) {
+			case 'day':
+			case 'custom_day':
+			case 'week':
+				// set the select days correctly
+				$('#jqcal_nb_days_select').val(this.model.get('nb_days'));
 				
-				// fix for ie7
-				if($.browser.msie && document.documentMode == '7') {
-					if(i == 0){
-						object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:50px;'});
+				//-----affichage------- 
+				var nb_days_displayed = 7;
+				switch(this.model.get('format')) {
+					case 'day': nb_days_displayed = 1;
+						break;
+					case 'custom_day': nb_days_displayed = this.model.get('nb_days');
+						break;
+					case 'week': nb_days_displayed = 7 - plugin.get('hidden_days').length;
+						break;
+					default: nb_days_displayed = 7;
+				}
+				
+				
+				//define #jqcal_hours width (the width of the displayed hours)
+				var hours_width = 50;
+
+				//find the best fitting size for the calendar
+				var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100 - hours_width);
+				var column_width = Math.floor(calendar_size/nb_days_displayed);
+				var total_width = nb_days_displayed*column_width + 1;
+				
+				//-------------
+			
+				// instantiate the template
+				var object = {rows: [], hours: [], width: column_width, total_width: (total_width), hours_width: hours_width, fix_ie7: []};
+				for(var i = 0; i < (plugin.get('day_ends_at') - plugin.get('day_starts_at')) * (1/plugin.get('day_fraction')); i++) {
+					object.rows.push({id: 'jqcal_row_'+i});
+					var hour = jqcal.time.addHours(this.model.get('starts_at'),(i*plugin.get('day_fraction') + plugin.get('day_starts_at')));
+					
+					// fix for ie7
+					if($.browser.msie && document.documentMode == '7') {
+						if(i == 0){
+							object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:50px;'});
+						}
+						else{
+							object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:49px;'});
+						}
 					}
 					else{
-						object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: 'height:49px;'});
+						object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: ''});
 					}
 				}
-				else{
-					object.hours.push({id: 'jqcal_hour_'+i, hour: jqcal.time.timestampToTime(hour, plugin.get('timezone_offset')), fix_ie7: ''});
+				var template = jqcal.templates.planning_day(object);
+				
+				// display the view
+				this.$el.html(template);
+				
+				// instantiate the day views
+				_.each(this.model.get('days').models, function(day) {
+					var day_view = new DayView({
+						model: day
+					});
+				});
+				
+				// display the events
+				_.each($('.jqcal').data('agendas').models, function(agenda) {
+					_.each(agenda.get('events').models, function(event) {
+						event.removeView();
+						event.get('view').render();
+						event.bindTimeslots();
+					});
+				});
+				
+				this.parse_full_day();
+			
+				// update events for each day
+				this.parse_each_day();
+				
+				break;
+			case 'custom_week':
+			case 'month':
+				// set the select days correctly
+				$('#jqcal_nb_weeks_select').val(this.model.get('nb_weeks'));
+			
+				//find the best fitting size for the calendar
+				var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100);
+				var column_width = Math.floor(calendar_size / 7);
+				var total_width = 7 * column_width + 1;
+				
+				// instantiate the template
+				var template = jqcal.templates.planning_month({
+					width: column_width,
+					total_width: total_width
+				});
+				
+				// display the view
+				this.$el.html(template);
+				
+				// fill the day names
+				var first_day = plugin.get('first_day');
+				for(var i = 0; i < 7; i++) {
+					$('#jqcal_days tr').append('<td>'+jqcal.dates.shortDays[(first_day + i)%7]+'</td>')
 				}
-			}
-			var template = jqcal.templates.planning(object);
-			
-			// display the view
-			this.$el.html(template);
-			
-			// instantiate the day views
-			_.each(this.model.get('days').models, function(day) {
-				var day_view = new DayView({
-					model: day
+				
+				// instantiate the week views
+				_.each(this.model.get('weeks').models, function(week) {
+					var week_view = new WeekView({
+						model: week
+					});
 				});
-			});
-			
-			// display the events
-			_.each($('.jqcal').data('agendas').models, function(agenda) {
-				_.each(agenda.get('events').models, function(event) {
-					event.removeView();
-					event.get('view').render();
-					event.bindTimeslots();
-				});
-					
-			});
-			
-			this.parse_full_day();
-			
-			// update events for each day
-			this.parse_each_day();
+				
+				break;
 		}
 		
 		// adjust the datepicker
@@ -1997,23 +2029,14 @@ EventCreateView = Backbone.View.extend({
 			}
 		});
 		
-							
-		// recurrency
-		$('[name = jqcal_event_create_recurrency]').click(function() {
-			if($(this).is(':checked')) {
-				new RecurrencyView({
-					el: $('#jqcal_recurrency')
-				});
-			}
-		});
-		
 		// apply the permissions
 		if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
 			$('#jqcal_event_create_edit').remove();
 		}
 	},
 	events: {
-		'click button': 'button'
+		'click button': 'button',
+		'click [name = jqcal_event_create_recurrency]': 'recurrency'
 	},
 	button: function(e) {
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
@@ -2065,6 +2088,13 @@ EventCreateView = Backbone.View.extend({
 			new EventEditView({
 				el: $('#jqcal_event_edit'),
 				model: this.model
+			});
+		}
+	},
+	recurrency: function() {
+		if($('[name = jqcal_event_create_recurrency]').is(':checked')) {
+			new RecurrencyView({
+				el: $('#jqcal_recurrency')
 			});
 		}
 	}
@@ -2239,8 +2269,8 @@ EventEditView = Backbone.View.extend({
 		
 		
 		// set the select on the right agenda
-		if(self.model.get('agenda')) {
-			$('[name = jqcal_event_edit_agenda]').val(self.model.get('agenda'));
+		if(this.model.get('agenda')) {
+			$('[name = jqcal_event_edit_agenda]').val(this.model.get('agenda'));
 		}
 		
 		// activate the color picker
@@ -2249,21 +2279,12 @@ EventEditView = Backbone.View.extend({
 			title: 'Pick a color.'
 		});
 		$('#jquery-colour-picker').css('zIndex', 15001);
-		var color = self.model.get('color') ? self.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
+		var color = this.model.get('color') ? this.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
 		$('[name = jqcal_event_edit_color]').val(color).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
 		
 		// link agenda & color
 		$('[name = jqcal_event_edit_agenda]').change(function() {
 			$('[name = jqcal_event_edit_color]').val($('.jqcal').data('agendas').where({label: $('[name = jqcal_event_edit_agenda]').val()})[0].get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
-		});
-		
-		// recurrency
-		$('[name = jqcal_event_edit_recurrency]').click(function() {
-			if($(self).is(':checked')) {
-				new RecurrencyView({
-					el: $('#jqcal_recurrency')
-				});
-			}
 		});
 		
 		_.each(jqcal.event, function(attribute) {
@@ -2284,7 +2305,8 @@ EventEditView = Backbone.View.extend({
 		}
 	},
 	events: {
-		'click button': 'button'
+		'click button': 'button',
+		'click [name = jqcal_event_edit_recurrency]': 'recurrency'
 	},
 	button: function(e) {
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
@@ -2345,6 +2367,13 @@ EventEditView = Backbone.View.extend({
 		else if(action == 'cancel') {
 			this.model.unbindTimeslots();
 			$('.jqcal').data('plugin').removeDialogs();
+		}
+	},
+	recurrency: function() {
+		if($('[name = jqcal_event_edit_recurrency]').is(':checked')) {
+			new RecurrencyView({
+				el: $('#jqcal_recurrency')
+			});
 		}
 	}
 });
@@ -2675,15 +2704,15 @@ AgendaEditView = Backbone.View.extend({
 				title: 'Pick a color.'
 			});
 			$('#jquery-colour-picker').css('zIndex', 15001);
-			$('[name = jqcal_agenda_edit_color]').val(self.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
+			$('[name = jqcal_agenda_edit_color]').val(this.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
 			
 			// set the transparency_past checkbox
-			if(self.model.get('transparency_past')) {
+			if(this.model.get('transparency_past')) {
 				$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
 			}
 			
 			// set the transparency_recurrency checkbox
-			if(self.model.get('transparency_recurrency')) {
+			if(this.model.get('transparency_recurrency')) {
 				$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
 			}
 			

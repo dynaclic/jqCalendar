@@ -203,16 +203,19 @@ var jqcal = new function() {
 			var starts_at = _.has(this.opt, 'starts_at') ? this.opt.starts_at : jqcal.time.getToday(plugin.get('timezone_offset'));
 			switch(this.opt.planning_format) {
 				case 'day':
-				case 'custom':
+				case 'custom_day':
 					starts_at = jqcal.time.getDay(starts_at, plugin.get('timezone_offset'));
 					break;
 				case 'week':
 					starts_at = jqcal.time.getWeek(starts_at, plugin);
 					break;
+				case 'month':
+					starts_at = jqcal.time.getMonth(starts_at, plugin);
 			}
 			var planning = new Planning({
 				format: this.opt.planning_format,
 				nb_days: this.opt.nb_days,
+				nb_weeks: this.opt.nb_weeks,
 				starts_at: starts_at
 			});
 			this.data('planning', planning);
@@ -391,6 +394,7 @@ var jqcal = new function() {
 		planning_format	: 'week',
 		hidden_days		: [],
 		nb_days			: 3,
+		nb_weeks		: 3,
 		event_created	: function(event) {return true;},
 		event_changed	: function(event) {return true;},
 		event_removed	: function(event) {return true;},

@@ -7,12 +7,17 @@ jqcal.templates = {
 				'<button id="jqcal_today_button">Today</button>'+
 			'</span><span id="jqcal_planning_format">'+
 				'<input type="radio" id="jqcal_toDay" name="jqcal_planning_format" value="day" /><label for="jqcal_toDay">Day</label>'+
-				'<input type="radio" id="jqcal_toCustom" name="jqcal_planning_format" value="custom" /><label for="jqcal_toCustom">Custom</label>'+
+				'<input type="radio" id="jqcal_toCustomDay" name="jqcal_planning_format" value="custom_day" /><label for="jqcal_toCustomDay">Custom Days</label>'+
 				'<input type="radio" id="jqcal_toWeek" name="jqcal_planning_format" value="week" /><label for="jqcal_toWeek">Week</label>'+
+				'<input type="radio" id="jqcal_toCustomWeek" name="jqcal_planning_format" value="custom_week" /><label for="jqcal_toCustomMonth">Custom Months</label>'+
 				'<input type="radio" id="jqcal_toMonth" name="jqcal_planning_format" value="month" /><label for="jqcal_toMonth">Month</label>'+
-			'</span><span">'+
+			'</span><span>'+
 				'Days: <select id="jqcal_nb_days_select">'+
-				'{{#select}}<option value={{value}}>{{value}}</option>{{/select}}'+
+				'{{#select_days}}<option value={{value}}>{{value}}</option>{{/select_days}}'+
+				'</select>'+
+			'</span><span>'+
+				'Weeks: <select id="jqcal_nb_weeks_select">'+
+				'{{#select_weeks}}<option value={{value}}>{{value}}</option>{{/select_weeks}}'+
 				'</select>'+
 			'</span>'+
 		'</div>'+
@@ -32,7 +37,7 @@ jqcal.templates = {
 		'<div id="jqcal_agenda_edit"></div>'+
 		'<div id="jqcal_recurrency"></div>'
 	,
-	planning:
+	planning_day:
 		'<table id="jqcal_days" column_width={{width}} style = "width: {{total_width}}px; margin-left: {{hours_width}}px;">'+
 			'<tbody>'+
 				'<tr></tr>'+
