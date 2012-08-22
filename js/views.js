@@ -95,13 +95,13 @@ PluginView = Backbone.View.extend({
 		var planning = $('.jqcal').data('planning');
 		switch(planning.get('format')) {
 			case 'day':
-				planning.set('starts_at', addDays(planning.get('starts_at'), sign));
+				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign));
 				break;
 			case 'custom':
-				planning.set('starts_at', addDays(planning.get('starts_at'), sign*planning.get('nb_days')));
+				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign*planning.get('nb_days')));
 				break;
 			case 'week':
-				planning.set('starts_at', addDays(planning.get('starts_at'), sign*7));
+				planning.set('starts_at', jqcal.time.addDays(planning.get('starts_at'), sign*7));
 				break;
 		}
 	},
@@ -111,10 +111,10 @@ PluginView = Backbone.View.extend({
 		switch(planning.get('format')) {
 			case 'day':
 			case 'custom':
-				planning.set('starts_at', getToday(plugin.get('timezone_offset')));
+				planning.set('starts_at', jqcal.time.getToday(plugin.get('timezone_offset')));
 				break;
 			case 'week':
-				planning.set('starts_at', getWeek(getToday(plugin.get('timezone_offset')), plugin));
+				planning.set('starts_at', jqcal.time.getWeek(jqcal.time.getToday(plugin.get('timezone_offset')), plugin));
 				break;
 		}
 	},
@@ -124,7 +124,7 @@ PluginView = Backbone.View.extend({
 		var new_format = $('[name = jqcal_planning_format]:checked').val();
 		planning.set('format', new_format);
 		if(new_format == 'week') {
-			planning.set('starts_at', getWeek(planning.get('starts_at'), plugin));
+			planning.set('starts_at', jqcal.time.getWeek(planning.get('starts_at'), plugin));
 		}
 	},
 	agendaMenu: function() {
