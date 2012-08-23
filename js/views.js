@@ -324,16 +324,19 @@ PlanningView = Backbone.View.extend({
 		var period = jqcal.time.timestampToFormat(this.model.get('starts_at'), plugin.get('timezone_offset'), plugin.get('date_format'));
 		switch(this.model.get('format')) {
 			case 'day':
+				plugin.get('period_changed')(this.model.get('starts_at'), this.model.get('starts_at'));
 				break;
 			case 'custom_day':
 			case 'week':
 				period += ' - ';
 				period += jqcal.time.timestampToFormat(jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length - 1), plugin.get('timezone_offset'), plugin.get('date_format'));
+				plugin.get('period_changed')(this.model.get('starts_at'), jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length - 1));
 				break;
 			case 'custom_week':
 			case 'month':
 				period += ' - ';
 				period += jqcal.time.timestampToFormat(jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length * 7 - 1), plugin.get('timezone_offset'), plugin.get('date_format'));
+				plugin.get('period_changed')(this.model.get('starts_at'), jqcal.time.addDays(this.model.get('starts_at'), this.model.get('days').models.length * 7 - 1));
 				break;
 		}
 		$('#jqcal_planning_period').html(period);
