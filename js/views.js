@@ -2570,6 +2570,16 @@ EventExtendedView = Backbone.View.extend({
 				}
 			}
 		}
+		// callback
+		var event = {
+			cid: this.model.get('super_model').cid,
+			starts_at: this.model.get('starts_at'),
+			ends_at: this.model.get('ends_at')
+		};
+		if(this.model.get('id')) {
+			event.id = this.model.get('super_model').get('id');
+		}
+		$('.jqcal').data('plugin').get('event_init_event')(event, action);
 	},
 	drag: function(e, toRenderFromUnbind, infos_event, infos_extended) {
 		$('.jqcal').disableSelection();
@@ -2607,6 +2617,17 @@ EventExtendedView = Backbone.View.extend({
 				var planning = $('.jqcal').data('planning');
 				planning.get('view').parse_days(toRender);
 			}
+			
+			// callback
+			var event = {
+				cid: model.cid,
+				starts_at: model.get('starts_at'),
+				ends_at: model.get('ends_at')
+			};
+			if(model.get('id')) {
+				event.id = model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'drag');
 		};
 		
 		$('html').on("mousemove", move);
@@ -2650,6 +2671,17 @@ EventExtendedView = Backbone.View.extend({
 			// render all the weeks we got from bind & unbind
 			var planning = $('.jqcal').data('planning');
 			planning.get('view').parse_weeks(toRender);
+			
+			// callback
+			var event = {
+				cid: model.cid,
+				starts_at: model.get('starts_at'),
+				ends_at: model.get('ends_at')
+			};
+			if(model.get('id')) {
+				event.id = model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'drag');
 		};
 		$('html').on("mousemove", move);
 		$('html').on('mouseup', up);
@@ -2695,6 +2727,17 @@ EventExtendedView = Backbone.View.extend({
 				var planning = $('.jqcal').data('planning');
 				planning.get('view').parse_days(toRender);
 			}
+			
+			// callback
+			var event = {
+				cid: model.cid,
+				starts_at: model.get('starts_at'),
+				ends_at: model.get('ends_at')
+			};
+			if(model.get('id')) {
+				event.id = model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);
@@ -2745,6 +2788,17 @@ EventExtendedView = Backbone.View.extend({
 			// render all the weeks we got from bind & unbind
 			var planning = $('.jqcal').data('planning');
 			planning.get('view').parse_weeks(toRender);
+			
+			// callback
+			var event = {
+				cid: model.cid,
+				starts_at: model.get('starts_at'),
+				ends_at: model.get('ends_at')
+			};
+			if(model.get('id')) {
+				event.id = model.get('id');
+			}
+			$('.jqcal').data('plugin').get('event_stop_event')(event, 'resize');
 		};
 				
 		$('html').on("mousemove", move);
