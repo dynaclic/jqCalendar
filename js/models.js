@@ -69,20 +69,25 @@ Planning = Backbone.Model.extend({
 		this.setCollection();
 		
 		// bind onChange event
-		this.bind('change:nb_days change:format change:starts_at', function() {
+		this.bind('change:nb_days change:nb_weeks change:format change:starts_at', function() {
 			this.setCollection();
 		});
 	},
 	setCollection: function() {
 		// get the plugin
 		var plugin = $('.jqcal').data('plugin');
-		
-		if(this.get('format') == 'month') {
+
+		if(this.get('format') == 'custom_week' || this.get('format') == 'month') {
 			// get the number of weeks
-			var month1 = (new Date(jqcal.time.addDays(this.get('starts_at'), 7))).getMonth();
-			var nb_weeks = 1;
-			while((new Date(jqcal.time.addDays(this.get('starts_at'), 7 * (nb_weeks)))).getMonth() == month1) {
-				nb_weeks++;
+			if(this.get('format') == 'month') {
+				var month1 = (new Date(jqcal.time.addDays(this.get('starts_at'), 7))).getMonth();
+				var nb_weeks = 1;
+				while((new Date(jqcal.time.addDays(this.get('starts_at'), 7 * (nb_weeks)))).getMonth() == month1) {
+					nb_weeks++;
+				}
+			}
+			else {
+				var nb_weeks = this.get('nb_weeks');
 			}
 			
 			// instantiate the collection of weeks
@@ -104,7 +109,7 @@ Planning = Backbone.Model.extend({
 				case 'day':
 					var nb_days = 1;
 					break;
-				case 'custom':
+				case 'custom_day':
 					var nb_days = this.get('nb_days');
 					break;
 				case 'week':
@@ -323,7 +328,8 @@ Event = Backbone.Model.extend({
 					agenda: this.get('agenda'),
 					color: this.get('color'),
 					starts_at: this.get('starts_at'),
-					ends_at: this.get('ends_at')
+					ends_at: this.get('ends_at'),
+					fullDay: this.get('fullDay')
 				}
 				if(this.get('recurrency')) {
 					event.recurrency = this.get('recurrency');
@@ -555,7 +561,6 @@ Event = Backbone.Model.extend({
 		var planning = $('.jqcal').data('planning');
 		
 		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
-			console.log('bind ' + this.cid);
 			this.get('view').$el.removeClass('unbind');
 			var weeks = planning.get('weeks');
 			
@@ -651,7 +656,6 @@ Event = Backbone.Model.extend({
 		var plugin = $('.jqcal').data('plugin');
 
 		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
-		console.log('unbind ' + this.cid);
 			//pour le render 
 			this.get('view').$el.addClass('unbind');
 			

@@ -92,7 +92,7 @@ var jqcal = new function() {
 			return date.getUTCFullYear()+'/'+(date.getUTCMonth()+1)+'/'+date.getUTCDate();
 		},
 
-		// convert a timestamp to a day (format: dd)
+		// convert a timestamp to a day (format: d?d)
 		timestampToMonthDay: function(timestamp, offset) {
 			return (new Date(timestamp - offset * 60000)).getUTCDate();
 		},
@@ -207,7 +207,10 @@ var jqcal = new function() {
 				event_removed	: this.opt.event_removed,
 				agenda_created	: this.opt.agenda_created,
 				agenda_changed	: this.opt.agenda_changed,
-				agenda_removed	: this.opt.agenda_removed
+				agenda_removed	: this.opt.agenda_removed,
+				event_init_event: this.opt.event_init_event,
+				event_stop_event: this.opt.event_stop_event,
+				period_changed	: this.opt.period_changed
 			});
 			this.data('plugin', plugin);
 
@@ -221,16 +224,19 @@ var jqcal = new function() {
 			var starts_at = _.has(this.opt, 'starts_at') ? this.opt.starts_at : jqcal.time.getToday(plugin.get('timezone_offset'));
 			switch(this.opt.planning_format) {
 				case 'day':
-				case 'custom':
+				case 'custom_day':
 					starts_at = jqcal.time.getDay(starts_at, plugin.get('timezone_offset'));
 					break;
 				case 'week':
 					starts_at = jqcal.time.getWeek(starts_at, plugin);
 					break;
+				case 'month':
+					starts_at = jqcal.time.getMonth(starts_at, plugin);
 			}
 			var planning = new Planning({
 				format: this.opt.planning_format,
 				nb_days: this.opt.nb_days,
+				nb_weeks: this.opt.nb_weeks,
 				starts_at: starts_at
 			});
 			this.data('planning', planning);
@@ -378,6 +384,40 @@ var jqcal = new function() {
 			});
 			return this;
 		},
+		changeByIds: function(ids) {
+			var agendas = $('.jqcal').data('agendas');
+			_.each(ids, function(values, id) {
+				var model;
+				if(model = agendas.get(id)) {
+					model.set(values, {silent: true});
+				}
+				else {
+					for(var i = 0; i < agendas.length; i++) {
+						if(model = agendas.models[i].get('events').get(id)) {
+							model.set(values, {silent: true});
+							break;
+						}
+					}
+				}
+			});
+		},
+		changeByCids: function(cids) {
+			var agendas = $('.jqcal').data('agendas');
+			_.each(cids, function(values, cid) {
+				var model;
+				if(model = agendas.getByCid(cid)) {
+					model.set(values);
+				}
+				else {
+					for(var i = 0; i < agendas.length; i++) {
+						if(model = agendas.models[i].get('events').getByCid(cid)) {
+							model.set(values);
+							break;
+						}
+					}
+				}
+			});
+		},
 		removeByIds: function(ids) {
 			var agendas = $('.jqcal').data('agendas');
 			_.each(ids, function(id) {
@@ -441,12 +481,16 @@ var jqcal = new function() {
 		planning_format	: 'week',
 		hidden_days		: [],
 		nb_days			: 3,
+		nb_weeks		: 3,
 		event_created	: function(event) {return true;},
 		event_changed	: function(event) {return true;},
 		event_removed	: function(event) {return true;},
 		agenda_created	: function(agenda) {return true;},
 		agenda_changed	: function(agenda) {return true;},
-		agenda_removed	: function(agenda) {return true;}
+		agenda_removed	: function(agenda) {return true;},
+		event_init_event: function(event, action) {return true;},
+		event_stop_event: function(event, action) {return true;},
+		period_changed	: function(starts_at, ends_at) {return true;}
 	};
 	
 })(jQuery);

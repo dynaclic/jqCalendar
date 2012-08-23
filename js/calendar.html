@@ -82,13 +82,17 @@
 			first_day		: 1,
 			planning_format	: 'week',
 			/*hidden_days		: [0,6],*/
-			nb_days			: 3/*,
+			nb_days			: 3,
+			nb_weeks		: 3/*,
 			agenda_created	: function(agenda) {console.log('agenda created:');console.log(agenda);},
 			agenda_changed	: function(agenda) {console.log('agenda changed:');console.log(agenda);},
 			agenda_removed	: function(agenda) {console.log('agenda removed:');console.log(agenda);},
 			event_created	: function(event) {console.log('event created:');console.log(event);},
 			event_changed	: function(event) {console.log('event changed:');console.log(event);},
-			event_removed	: function(event) {console.log('event removed:');console.log(event);}*/
+			event_removed	: function(event) {console.log('event removed:');console.log(event);},
+			event_init_event: function(event, action) {console.log('event init event:');console.log(event);console.log(action);},
+			event_stop_event: function(event, action) {console.log('event stop event:');console.log(event);console.log(action);},
+			period_changed	: function(starts_at, ends_at) {console.log('period changed:'); console.log(new Date(starts_at)); console.log(new Date(ends_at));}*/
 		}).jqcal('add', [
 			{
 				label: 'a',
