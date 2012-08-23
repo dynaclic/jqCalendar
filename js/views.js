@@ -2834,13 +2834,16 @@ EventCreateView = Backbone.View.extend({
 			},
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
+			},
+			events: {		
+				show: function(event, api){
+					// apply the permissions
+					if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
+						$('#jqcal_event_create_edit').remove();
+					}
+				}
 			}
 		});
-		
-		// apply the permissions
-		if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
-			$('#jqcal_event_create_edit').remove();
-		}
 	},
 	events: {
 		'click button': 'button',
@@ -2968,16 +2971,19 @@ EventReadView = Backbone.View.extend({
 			},
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
+			},
+			events: {
+				show: function(event, api) {
+					// apply the permissions
+					if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
+						$('#jqcal_event_read_edit').remove();
+					}
+					if(_.indexOf(plugin.get('no_perm_event'), 'delete') != -1) {
+						$('#jqcal_event_read_delete').remove();
+					}
+				}
 			}
 		});
-		
-		// apply the permissions
-		if(_.indexOf(plugin.get('no_perm_event'), 'edit') != -1) {
-			$('#jqcal_event_read_edit').remove();
-		}
-		if(_.indexOf(plugin.get('no_perm_event'), 'delete') != -1) {
-			$('#jqcal_event_read_delete').remove();
-		}
 	},
 	events: {
 		'click button': 'button'
@@ -3081,6 +3087,40 @@ EventEditView = Backbone.View.extend({
 				},
 				style: {
 					classes: 'ui-tooltip-shadow ui-tooltip-light'
+				},
+				events: {
+					show: function(event, api){
+						// set the select on the right agenda
+						if(self.model.get('agenda')) {
+							$('[name = jqcal_event_edit_agenda]').val(self.model.get('agenda'));
+						}
+						
+						// activate the color picker
+						$('[name = jqcal_event_edit_color]').colourPicker({
+							ico: './dependencies/jquery.colourPicker.gif',
+							title: 'Pick a color.'
+						});
+						$('#jquery-colour-picker').css('zIndex', 15001);
+						var color = self.model.get('color') ? self.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
+						$('[name = jqcal_event_edit_color]').val(color).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
+							
+						_.each(jqcal.event, function(attribute) {
+							if(attribute.type == 'radio') {
+								$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
+							}
+							else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
+								$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
+							}
+						});
+						
+						if(self.model.get('recurrency')) {
+							$('[name = jqcal_event_edit_recurrency]').attr('checked', 'checked').val(JSON.stringify(self.model.get('recurrency')));
+						}
+						
+						if(self.model.get('is_occurrence')) {
+							$('[name = jqcal_event_edit_recurrency]').hide();
+						}
+					}
 				}
 			});
 		}
@@ -3092,47 +3132,11 @@ EventEditView = Backbone.View.extend({
 				height: $('.jqcal').height()
 			}).offset($('.jqcal').offset()).html(template);
 		}
-		
-		
-		// set the select on the right agenda
-		if(this.model.get('agenda')) {
-			$('[name = jqcal_event_edit_agenda]').val(this.model.get('agenda'));
-		}
-		
-		// activate the color picker
-		$('[name = jqcal_event_edit_color]').colourPicker({
-			ico: './dependencies/jquery.colourPicker.gif',
-			title: 'Pick a color.'
-		});
-		$('#jquery-colour-picker').css('zIndex', 15001);
-		var color = this.model.get('color') ? this.model.get('color').substr(1) : $('.jqcal').data('agendas').models[0].get('color').substr(1);
-		$('[name = jqcal_event_edit_color]').val(color).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
-		
-		// link agenda & color
-		$('[name = jqcal_event_edit_agenda]').change(function() {
-			$('[name = jqcal_event_edit_color]').val($('.jqcal').data('agendas').where({label: $('[name = jqcal_event_edit_agenda]').val()})[0].get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
-		});
-		
-		_.each(jqcal.event, function(attribute) {
-			if(attribute.type == 'radio') {
-				$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
-			}
-			else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
-				$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
-			}
-		});
-		
-		if(self.model.get('recurrency')) {
-			$('[name = jqcal_event_edit_recurrency]').attr('checked', 'checked').val(JSON.stringify(self.model.get('recurrency')));
-		}
-		
-		if(self.model.get('is_occurrence')) {
-			$('[name = jqcal_event_edit_recurrency]').hide();
-		}
 	},
 	events: {
 		'click button': 'button',
-		'click [name = jqcal_event_edit_recurrency]': 'recurrency'
+		'click [name = jqcal_event_edit_recurrency]': 'recurrency',
+		'change [name = jqcal_event_edit_agenda]': 'edit_agenda'
 	},
 	button: function(e) {
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
@@ -3207,6 +3211,9 @@ EventEditView = Backbone.View.extend({
 				el: $('#jqcal_recurrency')
 			});
 		}
+	},
+	edit_agenda: function() {
+		$('[name = jqcal_event_edit_color]').val($('.jqcal').data('agendas').where({label: $('[name = jqcal_event_edit_agenda]').val()})[0].get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_event_edit_color]').val());
 	}
 });
 
@@ -3326,16 +3333,18 @@ AgendaCreateView = Backbone.View.extend({
 			},
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
+			},
+			events : {
+				show: function(event, api){
+					// activate the color picker
+					$('[name = jqcal_agenda_create_color]').colourPicker({
+						ico: './dependencies/jquery.colourPicker.gif',
+						title: 'Pick a color.'
+					});
+					$('#jquery-colour-picker').css('zIndex', 15001);
+				}
 			}
 		});
-		
-							
-		// activate the color picker
-		$('[name = jqcal_agenda_create_color]').colourPicker({
-			ico: './dependencies/jquery.colourPicker.gif',
-			title: 'Pick a color.'
-		});
-		$('#jquery-colour-picker').css('zIndex', 15001);
 	},
 	events: {
 		'click button': 'button'
@@ -3445,17 +3454,19 @@ AgendaReadView = Backbone.View.extend({
 			},
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
-			}
+			},
+			events: {
+				show: function(event, api){
+					// apply the permissions
+					if(_.indexOf(plugin.get('no_perm_agenda'), 'edit') != -1) {
+						$('#jqcal_agenda_read_edit').remove();
+					}
+					if(_.indexOf(plugin.get('no_perm_agenda'), 'delete') != -1) {
+						$('#jqcal_agenda_read_delete').remove();
+					}
+				}
+			}	
 		});
-		
-							
-		// apply the permissions
-		if(_.indexOf(plugin.get('no_perm_agenda'), 'edit') != -1) {
-			$('#jqcal_agenda_read_edit').remove();
-		}
-		if(_.indexOf(plugin.get('no_perm_agenda'), 'delete') != -1) {
-			$('#jqcal_agenda_read_delete').remove();
-		}
 	},
 	events: {
 		'click button': 'button'
@@ -3527,33 +3538,36 @@ AgendaEditView = Backbone.View.extend({
 				},
 				style: {
 					classes: 'ui-tooltip-shadow ui-tooltip-light'
-				}
-			});
-			
-			// activate the color picker
-			$('[name = jqcal_agenda_edit_color]').colourPicker({
-				ico: './dependencies/jquery.colourPicker.gif',
-				title: 'Pick a color.'
-			});
-			$('#jquery-colour-picker').css('zIndex', 15001);
-			$('[name = jqcal_agenda_edit_color]').val(this.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
-			
-			// set the transparency_past checkbox
-			if(this.model.get('transparency_past')) {
-				$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
-			}
-			
-			// set the transparency_recurrency checkbox
-			if(this.model.get('transparency_recurrency')) {
-				$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
-			}
-			
-			_.each(jqcal.agenda, function(attribute) {
-				if(attribute.type == 'radio') {
-					$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
-				}
-				else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
-					$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
+				},
+				events: {
+					show: function(event, api){
+						// activate the color picker
+						$('[name = jqcal_agenda_edit_color]').colourPicker({
+							ico: './dependencies/jquery.colourPicker.gif',
+							title: 'Pick a color.'
+						});
+						$('#jquery-colour-picker').css('zIndex', 15001);
+						$('[name = jqcal_agenda_edit_color]').val(self.model.get('color').substr(1)).css('backgroundColor', '#' + $('[name = jqcal_agenda_edit_color]').val());
+						
+						// set the transparency_past checkbox
+						if(self.model.get('transparency_past')) {
+							$('[name = jqcal_agenda_edit_transparency_past]').attr('checked', 'checked');
+						}
+						
+						// set the transparency_recurrency checkbox
+						if(self.model.get('transparency_recurrency')) {
+							$('[name = jqcal_agenda_edit_transparency_recurrency]').attr('checked', 'checked');
+						}
+						
+						_.each(jqcal.agenda, function(attribute) {
+							if(attribute.type == 'radio') {
+								$('[name = jqcal_event_edit_'+attribute.name+'][value = '+self.model.get(attribute.name)+']').attr('checked', 'checked');
+							}
+							else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
+								$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
+							}
+						});
+					}
 				}
 			});
 		}
