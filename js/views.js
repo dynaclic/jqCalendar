@@ -180,7 +180,7 @@ PlanningView = Backbone.View.extend({
 			$('#jqcal_nb_days_select').parent().hide();
 		}
 		
-		if(this.model.get('format') == 'month') {
+		if(this.model.get('format') == 'month' || this.model.get('format') == 'custom_week') {
 			//find the best fitting size for the calendar
 			var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100);
 			var column_width = Math.floor(calendar_size / 7);
@@ -207,6 +207,17 @@ PlanningView = Backbone.View.extend({
 					model: week
 				});
 			});
+			
+			
+			// display the events
+			_.each($('.jqcal').data('agendas').models, function(agenda) {
+				_.each(agenda.get('events').models, function(event) {
+					event.removeView();
+					event.get('view').render();
+					event.bindTimeslots();
+				});
+			});
+			this.parse_each_week();
 		}
 		else {
 			// set the select days correctly
@@ -271,6 +282,7 @@ PlanningView = Backbone.View.extend({
 				_.each(agenda.get('events').models, function(event) {
 					event.removeView();
 					event.get('view').render();
+					event.get('view').$el.show();
 					event.bindTimeslots();
 				});
 					
@@ -285,7 +297,170 @@ PlanningView = Backbone.View.extend({
 		// adjust the datepicker
 		$('#jqcal_datepicker').datepicker('setDate', new Date(this.model.get('starts_at')));
 	},
+	parse_each_week: function() {
+		var self = this;
+		_.each(this.model.get('weeks').models, function(week) {
+			self.parse_week(week);
+		});
+	},
+	parse_weeks: function(weeks) {
+		var self = this;
+		_.each(weeks, function(week) {
+			self.parse_week(week);
+		});
+	},
+	parse_week: function(week) {// browse each day of the week to determine the position of the events inside (for month view)
+		var debut = new Date();
+		var all_events = [];
+		var max = 0;
+		//z index = 0
+		_.each(week.get('daySlots').models, function(daySlot) {
+			events = daySlot.get('events').models;
+			all_events = _.union(all_events, events);
+			max = events.length > max ? events.length : max;
+			for(var e in events){
+				events[e].get('view').$el.css('zIndex', 0);
+			}
+		});
+		
+		if(all_events.length > 0){
+			_.each(all_events, function(event){
+				event.get('view').$el.show();
+			});
+			var plugin = $('.jqcal').data('plugin');
+			// determine z_index range
+			var total_z_index = [];
+			for(var i = 1; i <= max; i++){
+				total_z_index.push(i);
+			}
+			//determine z_index of each event
+			_.each(week.get('daySlots').models, function(daySlot){
+				events = daySlot.get('events').models;
+				var new_events = _.filter(events, function(event){
+					return event.get('view').$el.css('zIndex') == 'auto' || event.get('view').$el.css('zIndex') == '0' || event.get('view').$el.css('zIndex') == 0;
+				});
+				if(new_events.length != 0){
+					new_events.sort(function(event1, event2) {
+						if(event1.get('starts_at') < event2.get('starts_at')){
+							return -1;
+						}
+						else if(event1.get('starts_at') == event2.get('starts_at')){
+							if(event1.get('ends_at') >= event2.get('ends_at')){
+								return -1;
+							}
+							else{
+								return 1;
+							}	
+						}
+						else{
+							return 1;
+						}
+					});
+					var old_events_z_index = [];
+					old_events = _.difference(events, new_events);
+					for(var e in old_events){
+						old_events_z_index.push(~~(old_events[e].get('view').$el.css('zIndex')));
+					}
+					var z_index_dispo = _.difference(total_z_index, old_events_z_index);
+
+					for(var e in new_events){
+						var z = z_index_dispo[e];
+						if(z){
+							new_events[e].get('view').$el.css('zIndex', z);
+						}
+						else {
+							new_events[e].get('view').$el.css('zIndex', max);
+						}
+					}
+				}
+			});
+			
+			var pos_top_init = $('#jqcal_dayslots').offset().top;
+			var height_init = $('#jqcal_dayslots tr').outerHeight()/6;
+			
+			var plus_events = [];
+			var no_plus_daySlots = [];
+			
+			//filling
+			_.each(week.get('daySlots').models, function(daySlot){
+				no_plus_daySlots.push(daySlot.get('view'));
+			});
+			
+			//place the events according to their z_index
+			for(var e in all_events){
+				zIndex = ~~(all_events[e].get('view').$el.css('zIndex'));
+				if(zIndex <= 4) {
+					all_events[e].get('view').$el.offset({top: all_events[e].get('daySlot_view').$el.position().top + $('#jqcal_calendar_events').position().top + 1 +(zIndex - 1) * (height_init+3)});
+					all_events[e].get('view').$el.height(height_init);
+				}
+				else {
+					if(plus_events.length == 0){
+						plus_events.push([all_events[e].get('daySlot_view'), all_events[e]]);
+						//removing
+						no_plus_daySlots.splice(no_plus_daySlots.indexOf(all_events[e].get('daySlot_view')),1);
+					}
+					else {
+						for(obj in plus_events){
+							if(plus_events[obj][0] == all_events[e].get('daySlot_view')){
+								plus_events[obj].push(all_events[e]);
+							}
+							else {
+								plus_events.push([all_events[e].get('daySlot_view'), all_events[e]]);
+								//removing
+								no_plus_daySlots.splice(no_plus_daySlots.indexOf(all_events[e].get('daySlot_view')),1);
+							}
+						}
+					}
+				}
+			}
+			if(plus_events.length > 0){
+				_.each(plus_events, function(obj){
+					var daySlot_view = obj[0];
+					var events = _.rest(obj);
+					var text = $(document.createElement("div"));
+					for(var e in events){
+						events[e].get('view').$el.hide();
+						console.log(events[e]);
+						text.append('<div>' + events[e].get('label') + '</div>');
+					}
+					$('#plus_' + daySlot_view.model.cid).remove();
+					daySlot_view.$el.append('<div id="plus_' + daySlot_view.model.cid+'" style="z-index: 100;"><a class="plus" href="" onClick="return false;">+' + events.length + ' en plus</a></div>');
+					$('#plus_' + daySlot_view.model.cid).offset({top: daySlot_view.$el.position().top + $('#jqcal_calendar_events').position().top - 2 + 4 * (height_init+3)});
+					$('#plus_' + daySlot_view.model.cid).qtip({
+						content: {
+							title: {
+									text: jqcal.time.timestampToFormat(daySlot_view.model.get('starts_at'), plugin.get('timezone_offset'), 'M d, D'),
+									button: true
+							},
+							text: text
+						},
+						show: {
+							event: 'click'
+						},
+						hide: false,
+						position: {
+							my: 'bottom left',
+							at: 'top right',
+							viewport: $(window)
+						},
+						style: {
+							classes: 'ui-tooltip-shadow ui-tooltip-light'
+						}
+					});
+				});
+			}
+			
+			_.each(no_plus_daySlots, function(daySlot_view){
+				$('#plus_' + daySlot_view.model.cid).remove();
+			});
+		}
+		var fin = new Date();
+		console.log('temps d\'execution de parse_week = ' + (fin - debut) + ' ms');
+	},
 	parse_full_day: function() { // browse each day to determine the position of the events inside (for full day events)
+		if($('.jqcal').data('planning').get('format') == 'month'){
+			return false;
+		}
 		var all_events = [];
 		var max = 0;
 		//z index = 0
@@ -347,11 +522,11 @@ PlanningView = Backbone.View.extend({
 			}
 		});
 
-		//initial values (based on #jqcal_days)
+		//initial values
 		$('#jqcal_fulltimeslots').height($('#jqcal_days').height());
 		var pos_top_init = $('#jqcal_fulltimeslots').offset().top;
 		var height_init = $('#jqcal_fulltimeslots').outerHeight() - 10;
-		
+			
 		//height
 		$('#jqcal_fulltimeslots').height(max * height_init + 20);
 		
@@ -635,7 +810,7 @@ FullTimeSlotView = Backbone.View.extend({
 			var full_day_event = new Event({
 				starts_at: this.model.get('starts_at'),
 				ends_at: this.model.get('ends_at'),
-				fullDay: true
+				full_day: true
 			});
 			
 			var full_day_event_view = new EventView({
@@ -740,11 +915,26 @@ DaySlotView = Backbone.View.extend({
 		$('#jqcal_dayslots tbody tr:last').append(this.$el);
 	},
 	events: {
-		// on click: create an Event
 		'mousedown': 'createEvent'
 	},
-	createEvent: function() {
-		
+	createEvent: function(e) {
+		if(!$(e.target).hasClass('plus')){
+			if(_.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'create') == -1) {
+				// instantiate the event
+				var event = new Event({
+					starts_at: this.model.get('starts_at'),
+					ends_at: this.model.get('ends_at'),
+					full_day: true
+				});
+				
+				// instantiate the view
+				var event_view = new EventView({
+					model: event
+				});
+				
+				event_view.creation_fd();
+			}
+		}
 	}
 });
 
@@ -824,7 +1014,13 @@ AgendaView = Backbone.View.extend({
 				event.bindTimeslots();
 			});
 		}
-		$('.jqcal').data('planning').get('view').parse_each_day();
+		var planning = $('.jqcal').data('planning');
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_events'){
+			planning.get('view').parse_each_week();
+		}
+		else{
+			planning.get('view').parse_each_day();
+		}
 		this.model.set('display', !this.model.get('display'));
 	},
 	read: function() {
@@ -917,42 +1113,71 @@ EventView = Backbone.View.extend({
 		
 		
 		// unbind this event from the fulltimeslots
-		if(this.model.get('fullDay')){
-			var this_model = this.model;
-			_.each(planning.get('days').models, function(day){
-				day.get('fullTimeSlot').get('events').remove(this_model);
-			});
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+		
+		}
+		else {
+			if(this.model.get('full_day')){
+				var this_model = this.model;
+				_.each(planning.get('days').models, function(day){
+					day.get('fullTimeSlot').get('events').remove(this_model);
+				});
+			}
 		}
 		
 		// append it if it's in the planning
-		var day = jqcal.time.inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
-		if(day) {
-			if(this.model.get('fullDay')){
+		if(planning.get('format') == 'month'|| planning.get('format') == 'custom_week'){
+			var week = jqcal.time.inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
+			if(week){
 				this.setTemplate();
-				if(! this.model.get('fullTimeSlot_view')) {
-					// search for the timeSlot container
-					var fullTimeSlot_view = day.get('fullTimeSlot').get('view');
-					// store the timeSlot_view inside the Event		
-					this.model.set('fullTimeSlot_view', fullTimeSlot_view);
-					// display the view
-					$('#jqcal_div_fulltimeslots').append(this.$el);
-				}
-			}
-			else {
-				this.setTemplate();
-				if(! this.model.get('timeSlot_view')) {
-					// search for the timeSlot container
-					var i = 0, timeSlots = day.get('timeSlots').models;
-					if(!(this.model.get('starts_at') < timeSlots[0].get('starts_at'))) {
-						while(this.model.get('starts_at') >= day.get('timeSlots').models[i].get('ends_at')) {
+				if(! this.model.get('daySlot_view')) {
+					
+					// search for the daySlot container
+					var i = 0, daySlots = week.get('daySlots').models;
+					if(!(this.model.get('starts_at') < daySlots[0].get('starts_at'))) {
+						while(this.model.get('starts_at') >= daySlots[i].get('ends_at')) {
 							i++;
 						}
 					}
-					
-					// store the timeSlot_view inside the Event
-					this.model.set('timeSlot_view', timeSlots[i].get('view'));
+					// store the daySlot_view inside the Event		
+					this.model.set('daySlot_view', daySlots[i].get('view'));
+
 					// display the view
 					$('#jqcal_calendar_events').append(this.$el);
+				}
+			}
+		}
+		else {
+			var day = jqcal.time.inPlanning(this.model.get('starts_at'), this.model.get('ends_at'), planning, plugin);
+			if(day) {
+				if(this.model.get('full_day')){
+					this.setTemplate();
+					if(! this.model.get('fullTimeSlot_view')) {
+						// search for the fulltimeSlot container
+						var fullTimeSlot_view = day.get('fullTimeSlot').get('view');
+						// store the fulltimeSlot_view inside the Event		
+						this.model.set('fullTimeSlot_view', fullTimeSlot_view);
+						// display the view
+						$('#jqcal_div_fulltimeslots').append(this.$el);
+					}
+				}
+				else {
+					this.setTemplate();
+					if(! this.model.get('timeSlot_view')) {
+					
+						// search for the timeSlot container
+						var i = 0, timeSlots = day.get('timeSlots').models;
+						if(!(this.model.get('starts_at') < timeSlots[0].get('starts_at'))) {
+							while(this.model.get('starts_at') >= day.get('timeSlots').models[i].get('ends_at')) {
+								i++;
+							}
+						}
+						
+						// store the timeSlot_view inside the Event
+						this.model.set('timeSlot_view', timeSlots[i].get('view'));
+						// display the view
+						$('#jqcal_calendar_events').append(this.$el);
+					}
 				}
 			}
 		}
@@ -1140,6 +1365,121 @@ EventView = Backbone.View.extend({
 				this.$el.append('<div class = "handle-w" style = "position: absolute; cursor: e-resize; top: 0px; left: -3px; height : 100%; width: 5px;"></div>');
 			}
 		}
+		
+		if(daySlot_view = this.model.get('daySlot_view')){
+			var toDisplay = [];
+			var daySlot = daySlot_view.model;
+			var weeks = planning.get('weeks').models;
+			if(this.model.get('ends_at') <= jqcal.time.addDays(week.get('date'), 7)) {
+				toDisplay.push(Math.ceil((this.model.get('ends_at') - daySlot.get('starts_at')) / (24*60*60*1000)));
+			}
+			else {
+				toDisplay.push((jqcal.time.addDays(week.get('date'), 7) - daySlot.get('starts_at')) / (24* 60*60*1000));
+				var from = _.indexOf(weeks, week) + 1;
+				for(var i = from; i < weeks.length; i++) {
+					if(this.model.get('ends_at') <= weeks[i].get('daySlots').models[0].get('starts_at')) {
+						break;
+					}
+					else if(this.model.get('ends_at') <= jqcal.time.addDays(weeks[i].get('date'), 7)) {
+						toDisplay.push({
+							week: weeks[i],
+							length: Math.ceil((this.model.get('ends_at') - weeks[i].get('daySlots').models[0].get('starts_at')) / (24*60*60*1000))
+						});
+						break;
+					}
+					else {
+						toDisplay.push({
+							week: weeks[i],
+							length: 7
+						});
+					}
+				}
+			}
+			
+			// apply the css
+			// border style
+			this.$el.css('border', '1px');
+			this.$el.css('borderStyle', 'groove');
+			this.$el.css('borderColor', 'red');
+			this.$el.css('borderRadius', '5px');
+			this.$el.css('overflow', 'hidden');
+			
+			//height
+			var event_height = $('#jqcal_dayslots tr').outerHeight()/4;
+			
+			//width
+			var event_width = toDisplay[0] * (daySlot_view.$el.width() +4) - 10;
+			
+			scroll = _.isNumber(scroll) ? scroll : 0;
+			//offset
+			if($.browser.mozilla) {
+				var offset = {
+					top: daySlot_view.$el.offset().top,
+					left: daySlot_view.$el.offset().left
+				};
+			}
+			else if($.browser.webkit){
+				var offset = {
+					top: daySlot_view.$el.offset().top /*+ 1*/ + scroll,
+					left: daySlot_view.$el.offset().left /*+ 1*/
+				};
+			}
+			else {
+				var offset = {
+					top: daySlot_view.$el.offset().top + scroll,
+					left: daySlot_view.$el.offset().left
+				};
+			}
+			
+			//set offset/height/width |  (width will be changed after by planning.render_multi_events()
+			this.$el.css({
+				width: event_width,
+				height: event_height
+			}).offset(offset);
+			
+			
+			
+			// handles creation
+			if(toDisplay.length > 1) {
+				var selector = this.$el.children('.handle-e');
+				if(selector[0]) {
+					selector.remove();
+				}
+				if(!this.$el.children('.handle-w')[0]){
+					this.$el.append('<div class = "handle-w" style = "position: absolute; cursor: e-resize; top: 0px; left: -3px; height : 100%; width: 5px;"></div>');
+				}
+			}
+			else {
+				if(!this.$el.children('.handle-w')[0]){
+					this.$el.append('<div class = "handle-w" style = "position: absolute; cursor: e-resize; top: 0px; left: -3px; height : 100%; width: 5px;"></div>');
+				}
+				if(!this.$el.children('.handle-e')[0]){
+					this.$el.append('<div class = "handle-e" style = "position: absolute; cursor: e-resize; top: 0px; right: -3px; height : 100%; width: 5px;"></div>');
+				}
+			}
+			
+			// extra days
+			toDisplay.shift();
+			this.model.get('children').reset();
+			for(var i in toDisplay) {
+				var beginning = toDisplay[i].week.get('date');
+				var eventExtended = new EventExtended({
+					starts_at: beginning,
+					ends_at: jqcal.time.addDays(beginning, toDisplay[i].length),
+					super_model: this.model,
+					daySlot_view: toDisplay[i].week.get('daySlots').models[0].get('view')
+				});
+				
+				this.model.get('children').push(eventExtended);
+				
+				new EventExtendedView({
+					model: eventExtended,
+					arg: toDisplay[i],
+					last: i == (toDisplay.length - 1),
+					unbind: this.$el.hasClass('unbind')
+				});
+			}
+		}
 	},
 	events: {
 		'mousedown' : 'down'
@@ -1153,26 +1493,39 @@ EventView = Backbone.View.extend({
 		}
 	},
 	getCell: function(e) {
+		
+		if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week') {
+				var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
+				var pos_table = $('#jqcal_calendar_events').position();
+				var margin_left_table = parseInt($('#jqcal_dayslots').css('margin-left'));
+				var width = $('#jqcal_dayslots').attr('column_width');
+				var height = $('#jqcal_dayslots tr').outerHeight();
+				var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
+				var grille_y = Math.floor((e.clientY + scroll - pos_table.top)/height);
+				var result = $('#jqcal_dayslots>tbody>:nth-child('+ (grille_y+1) +')>:nth-child('+ (grille_x+1) +')');
+				return result;
+		}
+		else {
 		// two different methods for events and full day events
-		if(this.model.get('fullDay')){
-			var scroll = $(window).scrollTop();
-			var pos_table = $('#jqcal_fulltimeslots').position();
-			var margin_left_table = parseInt($('#jqcal_fulltimeslots').css('margin-left'));
-			var width = $('#jqcal_fulltimeslots').attr('column_width');
-			var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
-			var result = $('#jqcal_fulltimeslots>tbody>:nth-child('+1+')>:nth-child('+(grille_x+1)+')');
-			var result = $('#jqcal_fulltimeslots>tbody>:first-child>:nth-child('+(grille_x+1)+')');
-			return result;
-		}else {
-			var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
-			var pos_table = $('#jqcal_calendar_events').position();
-			var margin_left_table = parseInt($('#jqcal_timeslots').css('margin-left'));
-			var width = $('#jqcal_timeslots').attr('column_width');
-			var height = $('#jqcal_calendar_events tr').outerHeight();
-			var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
-			var grille_y = Math.floor((e.clientY+ scroll - pos_table.top)/height);
-			var result = $('#jqcal_timeslots>tbody>:nth-child('+(grille_y+1)+')>:nth-child('+(grille_x+1)+')');
-			return result;
+			if(this.model.get('full_day')){
+				var scroll = $(window).scrollTop();
+				var pos_table = $('#jqcal_fulltimeslots').position();
+				var margin_left_table = parseInt($('#jqcal_fulltimeslots').css('margin-left'));
+				var width = $('#jqcal_fulltimeslots').attr('column_width');
+				var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
+				var result = $('#jqcal_fulltimeslots>tbody>:first-child>:nth-child('+(grille_x+1)+')');
+				return result;
+			}else {
+				var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
+				var pos_table = $('#jqcal_calendar_events').position();
+				var margin_left_table = parseInt($('#jqcal_timeslots').css('margin-left'));
+				var width = $('#jqcal_timeslots').attr('column_width');
+				var height = $('#jqcal_calendar_events tr').outerHeight();
+				var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
+				var grille_y = Math.floor((e.clientY+ scroll - pos_table.top)/height);
+				var result = $('#jqcal_timeslots>tbody>:nth-child('+(grille_y+1)+')>:nth-child('+(grille_x+1)+')');
+				return result;
+			}
 		}
 	},
 	down: function(e) {
@@ -1198,48 +1551,62 @@ EventView = Backbone.View.extend({
 	},
 	actions: function(e) {
 		if(this.model.get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'edit') == -1){
-			var pos_top_init = this.$el.position().top;
-			//full day events
-			if(this.model.get('fullDay')){
+			if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+				var toRenderFromUnbind = this.model.unbindTimeslots();
 				if($(e.target).hasClass('handle-e')){
-					this.resize_e(e, pos_top_init);
+					this.resize_e_m(e, toRenderFromUnbind);
 				}
 				else if($(e.target).hasClass('handle-w')){
-					this.resize_w(e, pos_top_init);
+					this.resize_w_m(e, toRenderFromUnbind);
 				}
 				else{
-					this.drag_fd(e, pos_top_init);
+					this.drag_m(e, toRenderFromUnbind);
 				}
 			}
-			else {
-				//get initial informations
-				var infos_event = {
-					zIndex: this.$el.css('zIndex'),
-					offsetLeft: this.$el.position().left,
-					width: this.$el.width()
-				};
-				var infos_extended = [];
-				_.each(this.model.get('children').models, function(c) {
-					var infos = {
-						zIndex: c.get('view').$el.css('zIndex'),
-						offsetLeft: c.get('view').$el.position().left,
-						width: c.get('view').$el.width()
+			else{
+				//full day events
+				if(this.model.get('full_day')){
+					var pos_top_init = this.$el.position().top;
+					if($(e.target).hasClass('handle-e')){
+						this.resize_e(e, pos_top_init);
+					}
+					else if($(e.target).hasClass('handle-w')){
+						this.resize_w(e, pos_top_init);
+					}
+					else{
+						this.drag_fd(e, pos_top_init);
+					}
+				}
+				else {
+					//get initial informations
+					var infos_event = {
+						zIndex: this.$el.css('zIndex'),
+						offsetLeft: this.$el.position().left,
+						width: this.$el.width()
 					};
-					infos_extended.push(infos);
-				});
+					var infos_extended = [];
+					_.each(this.model.get('children').models, function(c) {
+						var infos = {
+							zIndex: c.get('view').$el.css('zIndex'),
+							offsetLeft: c.get('view').$el.position().left,
+							width: c.get('view').$el.width()
+						};
+						infos_extended.push(infos);
+					});
 
-				// get the day we must render
-				var toRenderFromUnbind = this.model.unbindTimeslots();
-				this.render();
-				
-				if($(e.target).hasClass('handle-n')){
-					this.resize_n(e, toRenderFromUnbind, infos_event, infos_extended);
-				}
-				else if($(e.target).hasClass('handle-s')){
-					this.resize_s(e, toRenderFromUnbind, infos_event, infos_extended);
-				}
-				else{
-					this.drag(e, toRenderFromUnbind, infos_event, infos_extended);
+					// get the day we must render
+					var toRenderFromUnbind = this.model.unbindTimeslots();
+					this.render();
+					
+					if($(e.target).hasClass('handle-n')){
+						this.resize_n(e, toRenderFromUnbind, infos_event, infos_extended);
+					}
+					else if($(e.target).hasClass('handle-s')){
+						this.resize_s(e, toRenderFromUnbind, infos_event, infos_extended);
+					}
+					else{
+						this.drag(e, toRenderFromUnbind, infos_event, infos_extended);
+					}
 				}
 			}
 		}
@@ -1319,6 +1686,52 @@ EventView = Backbone.View.extend({
 			
 			self.$el.css('zIndex', '0');
 			$('.jqcal').data('planning').get('view').parse_full_day();
+		};
+		
+		$('html').on("mousemove", move);
+		$('html').on('mouseup', up);
+	},
+	drag_m: function(e, toRenderFromUnbind) { // drag for month view
+		$('.jqcal').disableSelection();
+		var model = this.model;
+		var self = this;
+		var cell_init = self.getCell(e);
+		var start_at_init = parseInt(cell_init.attr('starts_at'));
+		self.$el.css('zIndex', '100');
+		
+		var event_length_1 =  model.get('starts_at') - cell_init.attr('starts_at');
+		var event_length_2 = model.get('ends_at') - cell_init.attr('ends_at');
+		var move = function(e) { 
+			var cell = self.getCell(e);
+			if(cell[0]){
+				var cell_starts_at = cell.attr('starts_at');
+				var cell_ends_at = cell.attr('ends_at');
+				model.set({
+					starts_at : parseInt(cell_starts_at) + event_length_1,
+					ends_at: parseInt(cell_ends_at) + event_length_2
+				});
+				self.$el.css('zIndex', '100');
+				$('.' + self.model.cid).css('zIndex', '100');
+			}
+		};
+		
+		var up = function(e) {
+			$('html').off('mousemove', move);
+			$('html').off('mouseup', up);
+			
+			self.$el.css('zIndex', '0');
+			$('.' + self.model.cid).css('zIndex', '0');
+			// get the weeks to render
+			var toRenderFromBind = model.bindTimeslots();
+				
+			// all the weeks to render (from bind and unbind)
+			var toRender = _.union(toRenderFromBind, toRenderFromUnbind);
+				
+			self.$el.css('zIndex', '0');
+				
+			// render all the weeks we got from bind & unbind
+			var planning = $('.jqcal').data('planning');
+			planning.get('view').parse_weeks(toRender);
 		};
 		
 		$('html').on("mousemove", move);
@@ -1415,15 +1828,30 @@ EventView = Backbone.View.extend({
 						ends_at: parseInt(ends_at_init)
 					});
 				}
+				if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+					self.$el.css('zIndex', '100');
+					$('.' + self.model.cid).css('zIndex', '100');
+				}
 			}
 		};
 		
 		var up = function(e) {
+			var planning = $('.jqcal').data('planning');
 			$('html').off('mousemove', move);
 			$('html').off('mouseup', up);
-			self.$el.css('zIndex', '0');
-			$('.jqcal').data('planning').get('view').parse_full_day();
 			
+			
+			if(planning.get('format') == 'month' ||planning.get('format') == 'custom_week'){
+				var planning = $('.jqcal').data('planning');
+				var toRender = model.bindTimeslots()
+				//planning.get('view').parse_weeks(toRender);
+			}
+			else {
+				self.$el.css('zIndex', '0');
+				planning.get('view').parse_full_day();
+			}
+
+
 			new EventCreateView({
 				el: $('#jqcal_event_create'),
 				model: model
@@ -1565,6 +1993,57 @@ EventView = Backbone.View.extend({
 		$('html').on("mousemove", move);
 		$('html').on('mouseup', up);
 	},
+	resize_w_m: function(e, toRenderFromUnbind) {
+		var plugin = $('.jqcal').data('plugin');
+		var model = this.model;
+		var ends_at_init = model.get('ends_at');
+		var starts_at_init = model.get('starts_at');
+		var starts_at_default = ends_at_init - (24*60*60*1000);
+		var self = this;
+		self.$el.css('cursor', 'e-resize');
+		$('.jqcal').disableSelection();
+		self.$el.css('zIndex', '100');
+	
+		var move = function(e) {
+			var cell = self.getCell(e);
+			if(cell[0]){
+				var cell_starts_at = cell.attr('starts_at');
+				if(cell_starts_at < ends_at_init){
+					model.set('starts_at', cell_starts_at);			
+				}
+				else{
+					model.set({
+						starts_at: starts_at_default,
+						ends_at : ends_at_init
+					});
+				}
+				self.$el.css('zIndex', '100');
+			}
+		};
+		
+		var up = function(e) {
+			$('html').off('mousemove', move);
+			$('html').off('mouseup', up);
+			self.$el.css('cursor', 'pointer');
+			self.$el.css('zIndex', '0');	
+			
+			// get the weeks to render
+			var toRenderFromBind = model.bindTimeslots();
+				
+			// all the weeks to render (from bind and unbind)
+			var toRender = _.union(toRenderFromBind, toRenderFromUnbind);
+				
+			self.$el.css('zIndex', '0');
+				
+			// render all the weeks we got from bind & unbind
+			var planning = $('.jqcal').data('planning');
+			planning.get('view').parse_weeks(toRender);
+			
+		};
+				
+		$('html').on("mousemove", move);
+		$('html').on('mouseup', up);
+	},
 	resize_e: function(e, pos_top_init) {
 		var plugin = $('.jqcal').data('plugin');
 		var model = this.model;
@@ -1604,6 +2083,55 @@ EventView = Backbone.View.extend({
 		$('html').on("mousemove", move);
 		$('html').on('mouseup', up);
 	},
+	resize_e_m: function(e, toRenderFromUnbind) {
+		var plugin = $('.jqcal').data('plugin');
+		var model = this.model;
+		var starts_at_init = model.get('starts_at');
+		var ends_at_init = model.get('ends_at');
+		var ends_at_default = starts_at_init + (24*60*60*1000);
+		var self = this;
+		self.$el.css('cursor', 'e-resize');
+		$('.jqcal').disableSelection();
+		self.$el.css('zIndex', '100');
+		var move = function(e) {
+			var cell = self.getCell(e);
+			if(cell[0]){
+				var cell_ends_at = cell.attr('ends_at');
+				
+				if(cell_ends_at > starts_at_init){
+					model.set('ends_at', cell_ends_at);
+				}
+				else{
+					model.set({
+						starts_at: starts_at_init,
+						ends_at : ends_at_default
+					});
+				}
+				self.$el.css('zIndex', '100');
+			}
+		};
+		
+		var up = function(e) {
+			$('html').off('mousemove', move);
+			$('html').off('mouseup', up);
+			self.$el.css('cursor', 'pointer');
+			self.$el.css('zIndex', '0');	
+			// get the weeks to render
+			var toRenderFromBind = model.bindTimeslots();
+				
+			// all the weeks to render (from bind and unbind)
+			var toRender = _.union(toRenderFromBind, toRenderFromUnbind);
+				
+			self.$el.css('zIndex', '0');
+				
+			// render all the weeks we got from bind & unbind
+			var planning = $('.jqcal').data('planning');
+			planning.get('view').parse_weeks(toRender);
+		};
+				
+		$('html').on("mousemove", move);
+		$('html').on('mouseup', up);
+	},
 	getScroll: function() {
 		return $('#jqcal_calendar_events').scrollTop();
 	},
@@ -1627,7 +2155,7 @@ EventView = Backbone.View.extend({
 	setTemplate: function() {
 		var plugin = $('.jqcal').data('plugin');
 		// instantiate the template
-		if(this.model.get('fullDay')){
+		if(this.model.get('full_day')){
 			var object = {
 				label: this.model.get('label')
 			};
@@ -1696,74 +2224,116 @@ EventExtendedView = Backbone.View.extend({
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
 		
-		//get the timeslot_view
-		var timeSlot_view = arg.day.get('timeSlots').models[0].get('view');
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+			//get the dayslot_view
+			var daySlot_view = arg.week.get('daySlots').models[0].get('view');
+				
+			// apply the css
+			console.log('daySlot_view extended :');
+			console.log(daySlot_view);
 			
-		// apply the css
-		
-		//border
-		this.$el.css('border', '1px');
-		this.$el.css('borderStyle', 'groove');
-		this.$el.css('borderColor', 'purple');
-		this.$el.css('borderRadius', '3px');
-		
-		// height 
-		var event_height = arg.length * timeSlot_view.$el.parent().outerHeight() - 1;
-		
-		var position_table = $('#jqcal_calendar_events').position();
-		var scroll = this.getScroll();
-		if($.browser.mozilla) {
+			//border
+			this.$el.css('border', '1px');
+			this.$el.css('borderStyle', 'groove');
+			this.$el.css('borderColor', 'purple');
+			this.$el.css('borderRadius', '3px');
+			
+			//height
+			var event_height = $('#jqcal_dayslots tr').outerHeight()/4;
+			
+			//width
+			var event_width = arg.length * (daySlot_view.$el.width() + 4) - 10;
+			
+			var position_table = $('#jqcal_calendar_events').position();
+			var scroll = this.getScroll();
+			//offset
 			var offset = {
-				top: timeSlot_view.$el.offset().top - position_table.top + $('#jqcal_calendar_events').scrollTop(),
-				left: timeSlot_view.$el.offset().left - position_table.left
+				top: daySlot_view.$el.offset().top - position_table.top + scroll,
+				left: daySlot_view.$el.offset().left - position_table.left
 			};
+			
+			
+			//set offset/height/width |  (width will be changed after by planning.render_multi_events()
+			this.$el.css({
+				width: event_width,
+				height: event_height
+			}).offset(offset);
+			
+			//creation des handles
+			if(last) {
+				this.$el.append('<div class = "handle-e" style = "position: absolute; cursor: e-resize; top: 0px; right: -3px; height : 100%; width: 5px;"></div>');
+			}
 		}
-		else if($.browser.webkit){
-			var offset = {
-				top: timeSlot_view.$el.offset().top /*+ 1*/ - position_table.top + scroll,
-				left: timeSlot_view.$el.offset().left /*+ 1*/ - position_table.left
-			};
-		}
-		else if($.browser.msie){
-			var offset = {
-				top: timeSlot_view.$el.offset().top - position_table.top + scroll,
-				left: timeSlot_view.$el.offset().left - position_table.left
-			};
-		}
-		else{//a regler pour opera/safari etc
-			var offset = {
-				top: timeSlot_view.$el.offset().top + 1 - position_table.top + scroll,
-				left: timeSlot_view.$el.offset().left + 1 - position_table.left
-			};
-		}
-		
-		// big override pour ie7...
-		if($.browser.msie && document.documentMode == '7') {
-			var nb_days_displayed = planning.get('days').models.length;
-			var index = Math.floor(nb_days_displayed/2); // méthode empirique (marche de 1 a 9 jours sauf 8)
-			if(timeSlot_view.el.cellIndex > index){
+		else{
+			//get the timeslot_view
+			var timeSlot_view = arg.day.get('timeSlots').models[0].get('view');
+				
+			// apply the css
+			
+			//border
+			this.$el.css('border', '1px');
+			this.$el.css('borderStyle', 'groove');
+			this.$el.css('borderColor', 'purple');
+			this.$el.css('borderRadius', '3px');
+			
+			// height 
+			var event_height = arg.length * timeSlot_view.$el.parent().outerHeight() - 1;
+			
+			var position_table = $('#jqcal_calendar_events').position();
+			var scroll = this.getScroll();
+			if($.browser.mozilla) {
+				var offset = {
+					top: timeSlot_view.$el.offset().top - position_table.top + $('#jqcal_calendar_events').scrollTop(),
+					left: timeSlot_view.$el.offset().left - position_table.left
+				};
+			}
+			else if($.browser.webkit){
+				var offset = {
+					top: timeSlot_view.$el.offset().top /*+ 1*/ - position_table.top + scroll,
+					left: timeSlot_view.$el.offset().left /*+ 1*/ - position_table.left
+				};
+			}
+			else if($.browser.msie){
 				var offset = {
 					top: timeSlot_view.$el.offset().top - position_table.top + scroll,
+					left: timeSlot_view.$el.offset().left - position_table.left
+				};
+			}
+			else{//a regler pour opera/safari etc
+				var offset = {
+					top: timeSlot_view.$el.offset().top + 1 - position_table.top + scroll,
 					left: timeSlot_view.$el.offset().left + 1 - position_table.left
 				};
 			}
-		}
-		
-		//set offset | height | width (width will be changed after by planning.render_multi_events()
-		this.$el.css({
-			backgroundColor: this.model.get('color') || '#FFDAB9',
-			width: timeSlot_view.$el.width() - 10,
-			height: event_height
-		}).offset(offset);
-		
-		// 
-		if(unbind){
-			this.$el.css('zIndex', 100);
-		}
-		
-		//creation des handles
-		if(last) {
-				this.$el.append('<div class = "handle-s" style = "position: absolute; cursor: n-resize; bottom: -3px; height : 5px; width: 100%"></div>');
+			
+			// big override pour ie7...
+			if($.browser.msie && document.documentMode == '7') {
+				var nb_days_displayed = planning.get('days').models.length;
+				var index = Math.floor(nb_days_displayed/2); // méthode empirique (marche de 1 a 9 jours sauf 8)
+				if(timeSlot_view.el.cellIndex > index){
+					var offset = {
+						top: timeSlot_view.$el.offset().top - position_table.top + scroll,
+						left: timeSlot_view.$el.offset().left + 1 - position_table.left
+					};
+				}
+			}
+			
+			//set offset | height | width (width will be changed after by planning.render_multi_events()
+			this.$el.css({
+				backgroundColor: this.model.get('color') || '#FFDAB9',
+				width: timeSlot_view.$el.width() - 10,
+				height: event_height
+			}).offset(offset);
+			
+			// 
+			if(unbind){
+				this.$el.css('zIndex', 100);
+			}
+			
+			//creation des handles
+			if(last) {
+					this.$el.append('<div class = "handle-s" style = "position: absolute; cursor: n-resize; bottom: -3px; height : 5px; width: 100%"></div>');
+			}
 		}
 	},
 	events: {
@@ -1778,15 +2348,28 @@ EventExtendedView = Backbone.View.extend({
 		}
 	},
 	getCell: function(e) {
-		var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
-		var pos_table = $('#jqcal_calendar_events').position();
-		var margin_left_table = parseInt($('#jqcal_timeslots').css('margin-left'));
-		var width = $('#jqcal_timeslots').attr('column_width');
-		var height = $('#jqcal_calendar_events tr').outerHeight();
-		var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
-		var grille_y = Math.floor((e.clientY+ scroll - pos_table.top)/height);
-		var result = $('#jqcal_timeslots>tbody>:nth-child('+(grille_y+1)+')>:nth-child('+(grille_x+1)+')');
-		return result;
+		if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week') {
+			var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
+			var pos_table = $('#jqcal_calendar_events').position();
+			var margin_left_table = parseInt($('#jqcal_dayslots').css('margin-left'));
+			var width = $('#jqcal_dayslots').attr('column_width');
+			var height = $('#jqcal_dayslots tr').outerHeight();
+			var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
+			var grille_y = Math.floor((e.clientY + scroll - pos_table.top)/height);
+			var result = $('#jqcal_dayslots>tbody>:nth-child('+ (grille_y+1) +')>:nth-child('+ (grille_x+1) +')');
+			return result;
+		}
+		else {
+			var scroll = $('#jqcal_calendar_events').scrollTop() + $(window).scrollTop();
+			var pos_table = $('#jqcal_calendar_events').position();
+			var margin_left_table = parseInt($('#jqcal_timeslots').css('margin-left'));
+			var width = $('#jqcal_timeslots').attr('column_width');
+			var height = $('#jqcal_calendar_events tr').outerHeight();
+			var grille_x = Math.floor((e.clientX - pos_table.left - margin_left_table)/width);
+			var grille_y = Math.floor((e.clientY+ scroll - pos_table.top)/height);
+			var result = $('#jqcal_timeslots>tbody>:nth-child('+(grille_y+1)+')>:nth-child('+(grille_x+1)+')');
+			return result;
+		}
 	},
 	down: function(e) {
 		var mouse_init = e;
@@ -1811,32 +2394,43 @@ EventExtendedView = Backbone.View.extend({
 	},
 	actions: function(e) {
 		if(this.model.get('super_model').get('agenda') && _.indexOf($('.jqcal').data('plugin').get('no_perm_event'), 'edit') == -1){
-			
-			//collecte les infos initiales
-			var super_model = this.model.get('super_model');
-			var infos_event = {
-				zIndex: super_model.get('view').$el.css('zIndex'),
-				offsetLeft: super_model.get('view').$el.position().left,
-				width: super_model.get('view').$el.width()
-			};
-			var infos_extended = [];
-			_.each(super_model.get('children').models, function(c) {
-				var infos = {
-					zIndex: c.get('view').$el.css('zIndex'),
-					offsetLeft: c.get('view').$el.position().left,
-					width: c.get('view').$el.width()
-				};
-				infos_extended.push(infos);
-			});
-		
-			var toRenderFromUnbind = this.model.get('super_model').unbindTimeslots();
-			this.model.get('super_model').get('view').render();
-			
-			if($(e.target).hasClass('handle-s')){
-				this.resize_s(e, toRenderFromUnbind, infos_event, infos_extended);
+			if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+				var toRenderFromUnbind = this.model.get('super_model').unbindTimeslots();
+				this.model.get('super_model').get('view').render();
+				if($(e.target).hasClass('handle-e')){
+					this.resize_e_m(e, toRenderFromUnbind);
+				}
+				else{
+					this.drag_m(e, toRenderFromUnbind);
+				}
 			}
 			else{
-				this.drag(e, toRenderFromUnbind, infos_event, infos_extended);
+				//collecte les infos initiales
+				var super_model = this.model.get('super_model');
+				var infos_event = {
+					zIndex: super_model.get('view').$el.css('zIndex'),
+					offsetLeft: super_model.get('view').$el.position().left,
+					width: super_model.get('view').$el.width()
+				};
+				var infos_extended = [];
+				_.each(super_model.get('children').models, function(c) {
+					var infos = {
+						zIndex: c.get('view').$el.css('zIndex'),
+						offsetLeft: c.get('view').$el.position().left,
+						width: c.get('view').$el.width()
+					};
+					infos_extended.push(infos);
+				});
+			
+				var toRenderFromUnbind = this.model.get('super_model').unbindTimeslots();
+				this.model.get('super_model').get('view').render();
+				
+				if($(e.target).hasClass('handle-s')){
+					this.resize_s(e, toRenderFromUnbind, infos_event, infos_extended);
+				}
+				else{
+					this.drag(e, toRenderFromUnbind, infos_event, infos_extended);
+				}
 			}
 		}
 	},
@@ -1878,6 +2472,48 @@ EventExtendedView = Backbone.View.extend({
 			}
 		};
 		
+		$('html').on("mousemove", move);
+		$('html').on('mouseup', up);
+	},
+	drag_m: function(e, toRenderFromUnbind) { // drag for month view
+		$('.jqcal').disableSelection();
+		var model = this.model.get('super_model');
+		var self = this;
+		var cell_init = self.getCell(e);
+		var start_at_init = parseInt(cell_init.attr('starts_at'));
+		self.$el.css('zIndex', '100');
+		
+		var event_length_1 =  model.get('starts_at') - cell_init.attr('starts_at');
+		var event_length_2 = model.get('ends_at') - cell_init.attr('ends_at');
+		var move = function(e) { 
+			var cell = self.getCell(e);
+			if(cell[0]){
+				var cell_starts_at = cell.attr('starts_at');
+				var cell_ends_at = cell.attr('ends_at');
+				model.set({
+					starts_at : parseInt(cell_starts_at) + event_length_1,
+					ends_at: parseInt(cell_ends_at) + event_length_2
+				});
+				model.get('view').$el.css('zIndex', '100');
+				$('.' + model.cid).css('zIndex', '100');
+			}
+		};
+		
+		var up = function(e) {
+			$('html').off('mousemove', move);
+			$('html').off('mouseup', up);
+			
+			self.$el.css('zIndex', '0');
+			// get the weeks to render
+			var toRenderFromBind = model.bindTimeslots();
+				
+			// all the weeks to render (from bind and unbind)
+			var toRender = _.union(toRenderFromBind, toRenderFromUnbind);
+				
+			// render all the weeks we got from bind & unbind
+			var planning = $('.jqcal').data('planning');
+			planning.get('view').parse_weeks(toRender);
+		};
 		$('html').on("mousemove", move);
 		$('html').on('mouseup', up);
 	},
@@ -1927,6 +2563,56 @@ EventExtendedView = Backbone.View.extend({
 		$('html').on("mousemove", move);
 		$('html').on('mouseup', up);
 	},
+	resize_e_m: function(e, toRenderFromUnbind) {
+		var plugin = $('.jqcal').data('plugin');
+		var model = this.model.get('super_model');
+		var starts_at_init = model.get('starts_at');
+		var ends_at_init = model.get('ends_at');
+		var ends_at_default = starts_at_init + 24*60*60*1000;
+		var self = this;
+		self.$el.css('cursor', 'e-resize');
+		$('.jqcal').disableSelection();
+		self.$el.css('zIndex', '100');
+		
+		var move = function(e) {
+			var cell = self.getCell(e);
+			if(cell[0]){
+				var cell_ends_at = cell.attr('ends_at');
+				
+				if(cell_ends_at > starts_at_init){
+					model.set('ends_at', cell_ends_at);
+				}
+				else{
+					model.set({
+						starts_at: starts_at_init,
+						ends_at : ends_at_default
+					});
+				}
+				model.get('view').$el.css('zIndex', '100');
+				$('.' + model.cid).css('zIndex', '100');
+			}
+		};
+		
+		var up = function(e) {
+			$('html').off('mousemove', move);
+			$('html').off('mouseup', up);
+			self.$el.css('cursor', 'pointer');
+			self.$el.css('zIndex', '0');
+			
+			// get the weeks to render
+			var toRenderFromBind = model.bindTimeslots();
+				
+			// all the weeks to render (from bind and unbind)
+			var toRender = _.union(toRenderFromBind, toRenderFromUnbind);
+				
+			// render all the weeks we got from bind & unbind
+			var planning = $('.jqcal').data('planning');
+			planning.get('view').parse_weeks(toRender);
+		};
+				
+		$('html').on("mousemove", move);
+		$('html').on('mouseup', up);
+	},
 	getScroll: function() {
 		return $('#jqcal_calendar_events').scrollTop();
 	},
@@ -1958,7 +2644,7 @@ EventCreateView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		// get the plugin
+		// get the plugin | planning
 		var plugin = $('.jqcal').data('plugin');
 		
 		// instantiate the template
@@ -1974,6 +2660,15 @@ EventCreateView = Backbone.View.extend({
 		
 		var self = this;
 		// create the qtip window
+		if(this.model.get('fullTimeSlot_view')){
+			var my = 'top left'; //
+			var at = 'bottom right'; // doesn't work with container, may be fixed one day
+		}
+		else {
+			var my = 'bottom left';
+			var at = 'top right';
+		}
+		
 		this.model.get('view').$el.qtip({
 			content: {
 				text: template,
@@ -1988,8 +2683,8 @@ EventCreateView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				my: 'bottom left',
-				at: 'top right',
+				my: my,
+				at: at,
 				viewport: $(window)
 			},
 			style: {
@@ -2046,19 +2741,30 @@ EventCreateView = Backbone.View.extend({
 					}
 				}
 			}
+			var planning = $('.jqcal').data('planning');
+			if(planning.get('format') == 'month' ||planning.get('format') == 'custom_week'){
+				this.model.get('view').$el.css('zIndex', '0');
+				$('.' + this.model.cid).css('zIndex', '0');
+				planning.get('view').parse_each_week();
+			}
 			this.model.set(object);
 			this.model.get('view').$el.qtip('destroy');
 			this.$el.data('view', '');
 		}
 		else if(action == 'cancel') {
-			if(this.model.get('fullDay')){
-				var this_model = this.model;
-				_.each($('.jqcal').data('planning').get('days').models, function(day){
-					day.get('fullTimeSlot').get('events').remove(this_model);
-				});
-				$('.jqcal').data('planning').get('view').parse_full_day();
+			if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+				this.model.unbindTimeslots();
 			}
-			this.model.unbindTimeslots();
+			else {
+				if(this.model.get('full_day')){
+					var this_model = this.model;
+					_.each($('.jqcal').data('planning').get('days').models, function(day){
+						day.get('fullTimeSlot').get('events').remove(this_model);
+					});
+					$('.jqcal').data('planning').get('view').parse_full_day();
+				}
+				this.model.unbindTimeslots();
+			}
 			$('.jqcal').data('plugin').removeDialogs();
 		}
 		else if(action == 'edit') {
@@ -2137,13 +2843,6 @@ EventReadView = Backbone.View.extend({
 		var originalTarget = e.srcElement || e.originalEvent.explicitOriginalTarget;
 		var action = $(originalTarget).attr('id').match(/_[a-zA-Z]+$/).toString().substr(1);
 		if(action == 'delete') {
-			if(this.model.get('fullDay')){
-				var this_model = this.model;
-				_.each($('.jqcal').data('planning').get('days').models, function(day){
-					day.get('fullTimeSlot').get('events').remove(this_model);
-				});
-				$('.jqcal').data('planning').get('view').parse_full_day();
-			}
 			if(this.model.get('is_occurrence') || this.model.get('recurrency')) {
 				new EventDeleteView({
 					el: $('#jqcal_event_delete'),
@@ -2152,8 +2851,22 @@ EventReadView = Backbone.View.extend({
 			}
 			else {
 				$('.jqcal').data('plugin').removeDialogs();
-				var days = this.model.remove();
-				$('.jqcal').data('planning').get('view').parse_days(days);
+				if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+					var weeks = this.model.remove();
+					$('.jqcal').data('planning').get('view').parse_weeks(weeks);
+				}
+				else{
+					if(this.model.get('full_day')){
+						var this_model = this.model;
+						_.each($('.jqcal').data('planning').get('days').models, function(day){
+							day.get('fullTimeSlot').get('events').remove(this_model);
+						});
+						$('.jqcal').data('planning').get('view').parse_full_day();
+					}
+					var days = this.model.remove();
+					$('.jqcal').data('planning').get('view').parse_days(days);
+				}
+				
 			}
 		}
 		else if(action == 'close') {
@@ -2335,8 +3048,14 @@ EventEditView = Backbone.View.extend({
 				this.model.set(object);
 				this.model.bindTimeslots();
 				plugin.removeDialogs();
+				var planning = $('.jqcal').data('planning');
+				if(planning.get('format') == 'month' || planning.get('format') == 'custom_events'){
+					planning.get('view').parse_each_week();
+				}
+				else {
+					planning.get('view').parse_each_day();
+				}
 				
-				$('.jqcal').data('planning').get('view').parse_each_day();
 			}
 			else {
 				alert('Specify valid dates, times and color.');

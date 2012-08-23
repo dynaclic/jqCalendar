@@ -141,18 +141,36 @@ var jqcal = new function() {
 
 		// return true if the event is to be displayed, false otherwise
 		inPlanning: function(starts_at, ends_at, planning, plugin) {
-			var model = null;
-			var days = planning.get('days').models;
-			var nb_timeSlots = (plugin.get('day_ends_at') - plugin.get('day_starts_at')) / plugin.get('day_fraction');
-			for(var day in days) {
-				if((starts_at >= days[day].get('timeSlots').models[0].get('starts_at') && starts_at < days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))
-				|| (ends_at > days[day].get('timeSlots').models[0].get('starts_at') && ends_at <= days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))
-				|| (starts_at <= days[day].get('timeSlots').models[0].get('starts_at') && ends_at >= days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))){
-					model = days[day];
-					break;
-				}
+			switch(planning.get('format')){
+				case 'day': 
+				case 'custom_day':
+				case 'week':
+					var model = null;
+					var days = planning.get('days').models;
+					var nb_timeSlots = (plugin.get('day_ends_at') - plugin.get('day_starts_at')) / plugin.get('day_fraction');
+					for(var day in days) {
+						if((starts_at >= days[day].get('timeSlots').models[0].get('starts_at') && starts_at < days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))
+						|| (ends_at > days[day].get('timeSlots').models[0].get('starts_at') && ends_at <= days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))
+						|| (starts_at <= days[day].get('timeSlots').models[0].get('starts_at') && ends_at >= days[day].get('timeSlots').models[nb_timeSlots - 1].get('ends_at'))){
+							model = days[day];
+							break;
+						}
+					}
+					return model;
+				case 'custom_week':
+				case 'month':
+					var model = null;
+					var weeks = planning.get('weeks').models;
+					for(var week in weeks) {
+						if((starts_at >= weeks[week].get('daySlots').models[0].get('starts_at') && starts_at < weeks[week].get('daySlots').models[6].get('ends_at'))
+						|| (ends_at > weeks[week].get('daySlots').models[0].get('starts_at') && ends_at <= weeks[week].get('daySlots').models[6].get('ends_at'))
+						|| (starts_at <= weeks[week].get('daySlots').models[0].get('starts_at') && ends_at >= weeks[week].get('daySlots').models[6].get('ends_at'))){
+							model = weeks[week];
+							break;
+						}
+					}
+					return model;
 			}
-			return model;
 		}
 	};
 };
@@ -232,33 +250,60 @@ var jqcal = new function() {
 				if(e.target == window) { // jquery bug: http://bugs.jqueryui.com/ticket/7514
 				
 					plugin.removeDialogs();
-					var nb_days_displayed = planning.get('days').models.length;
-					var hours_width = $('#jqcal_hours').attr('hours_width');
-					var calendar_size = Math.floor($('#jqcal_calendar').width()*95/100 - hours_width);
-					var column_width = Math.floor(calendar_size/nb_days_displayed);
-					var total_width = nb_days_displayed*column_width + 1;// table = tbody + 1 pour chrome et ff //
-					
-					var tableToChange = $('#jqcal_days, #jqcal_fulltimeslots, #jqcal_timeslots');
-					tableToChange.width(total_width);
-					tableToChange.attr('column_width', column_width);
-					
-					// get the agendas collection
-					var agendas = $('.jqcal').data('agendas');
-					
-					_.each(agendas.models, function(agenda) {
-						if(agenda.get('display')) {
-							_.each(agenda.get('events').models, function(event) {
-								if(event.get('timeSlot_view') || event.get('fullTimeSlot_view')) {
-									event.unbindTimeslots();
-									event.get('view').render();
-									event.bindTimeslots();
-								}
-							});
-						}
-					});
-					
-					planning.get('view').parse_each_day();
-					planning.get('view').parse_full_day();
+					if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+						var calendar_size = Math.floor($('#jqcal_calendar').width()*96/100);
+						var column_width = Math.floor(calendar_size/7);
+						var total_width = 7*column_width + 1;
+						var tableToChange = $('#jqcal_days, #jqcal_dayslots');
+						tableToChange.width(total_width);
+						tableToChange.attr('column_width', column_width);
+						
+						// get the agendas collection
+						var agendas = $('.jqcal').data('agendas');
+						
+						_.each(agendas.models, function(agenda) {
+							if(agenda.get('display')) {
+								_.each(agenda.get('events').models, function(event) {
+									if(event.get('daySlot_view')) {
+										event.unbindTimeslots();
+										event.get('view').render();
+										event.bindTimeslots();
+									}
+								});
+							}
+						});
+						
+						planning.get('view').parse_each_week();
+					}
+					else {
+						var nb_days_displayed = planning.get('days').models.length;
+						var hours_width = $('#jqcal_hours').attr('hours_width');
+						var calendar_size = Math.floor($('#jqcal_calendar').width()*95/100 - hours_width);
+						var column_width = Math.floor(calendar_size/nb_days_displayed);
+						var total_width = nb_days_displayed*column_width + 1;// table = tbody + 1 pour chrome et ff //
+						
+						var tableToChange = $('#jqcal_days, #jqcal_fulltimeslots, #jqcal_timeslots');
+						tableToChange.width(total_width);
+						tableToChange.attr('column_width', column_width);
+						
+						// get the agendas collection
+						var agendas = $('.jqcal').data('agendas');
+						
+						_.each(agendas.models, function(agenda) {
+							if(agenda.get('display')) {
+								_.each(agenda.get('events').models, function(event) {
+									if(event.get('timeSlot_view') || event.get('fullTimeSlot_view')) {
+										event.unbindTimeslots();
+										event.get('view').render();
+										event.bindTimeslots();
+									}
+								});
+							}
+						});
+						
+						planning.get('view').parse_full_day();
+						planning.get('view').parse_each_day();
+					}
 				}
 			});
 			
@@ -302,9 +347,14 @@ var jqcal = new function() {
 					});
 					event.bindTimeslots();
 				});
-				
-				$('.jqcal').data('planning').get('view').parse_full_day();
-				$('.jqcal').data('planning').get('view').parse_each_day();
+				var planning = $('.jqcal').data('planning');
+				if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+					planning.get('view').parse_each_weeks();
+				}
+				else {
+					planning.get('view').parse_full_day();
+					planning.get('view').parse_each_day();
+				}
 			});
 
 			return this;

@@ -40,7 +40,7 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 		
-		jqcal.templates.event += '<br />{{people}}';
+	/*	jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
 			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
 		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
@@ -50,7 +50,7 @@
 			name: 'people',
 			elements: ['view', 'create', 'edit'],
 			check: function(val) {
-				if(!val.match(/[1-9]\d*/)) {
+				if(!val.match(/[1-9]\d/)) {
 					return false;
 				}
 			}
@@ -67,7 +67,7 @@
 					return false;
 				}
 			}
-		});
+		});*/
 		
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
@@ -98,7 +98,7 @@
 					{
 						starts_at: event1,
 						ends_at: jqcal.time.addHours(event1, 6)
-					}, {
+					}, /*{
 						starts_at: event2,
 						ends_at: jqcal.time.addHours(event2, 3.5)
 					}, {
@@ -116,11 +116,11 @@
 					}, {
 						starts_at: event13,
 						ends_at: jqcal.time.addHours(event13, 2)
-					},
+					},*/
 					{
 						starts_at: event14,
 						ends_at: jqcal.time.addHours(event14, 72),
-						fullDay: true
+						full_day: true
 					}
 				]
 			},
@@ -131,7 +131,7 @@
 					{
 						starts_at: event3,
 						ends_at: jqcal.time.addHours(event3, 3)
-					}, {
+					}, /*{
 						starts_at: event4,
 						ends_at: jqcal.time.addHours(event4, 3)
 					}, {
@@ -146,11 +146,11 @@
 					}, {
 						starts_at: event11,
 						ends_at: jqcal.time.addHours(event11, 34)
-					},
+					}*/,
 					{
 						starts_at: event14,
 						ends_at: jqcal.time.addHours(event14, 48),
-						fullDay: true
+						full_day: true
 					}
 				]
 			}
