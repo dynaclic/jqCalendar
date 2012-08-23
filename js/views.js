@@ -314,15 +314,7 @@ PlanningView = Backbone.View.extend({
 						model: week
 					});
 				});
-				
-				// instantiate the week views
-				_.each(this.model.get('weeks').models, function(week) {
-					var week_view = new WeekView({
-						model: week
-					});
-				});
-				
-				
+					
 				// display the events
 				_.each($('.jqcal').data('agendas').models, function(agenda) {
 					_.each(agenda.get('events').models, function(event) {
