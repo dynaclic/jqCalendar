@@ -285,7 +285,7 @@ PlanningView = Backbone.View.extend({
 				break;
 			case 'custom_week':
 			case 'month':		
-				// set the select days correctly
+				// set the select weeks correctly
 				$('#jqcal_nb_weeks_select').val(this.model.get('nb_weeks'));
 			
 				//find the best fitting size for the calendar
@@ -2847,7 +2847,7 @@ EventCreateView = Backbone.View.extend({
 		_.each($('.jqcal').data('agendas').models, function(agenda) {
 			object.agendas.push({label: agenda.get('label')});
 		});
-		var template = jqcal.templates.event_create(object);
+		var template = jqcal.templates.event_create(object) + jqcal.templates.event_create_buttons({});
 		
 		var self = this;
 		// create the qtip window
@@ -2994,7 +2994,7 @@ EventReadView = Backbone.View.extend({
 				}
 			}
 		});
-		var template = jqcal.templates.event_read(object);
+		var template = jqcal.templates.event_read(object) + jqcal.templates.event_read_buttons({});
 		
 		// create the qtip window
 		this.model.get('view').$el.qtip({
@@ -3109,7 +3109,7 @@ EventEditView = Backbone.View.extend({
 				object[attribute.name] = self.model.get(attribute.name);
 			}
 		});
-		var template = jqcal.templates.event_edit(object);
+		var template = jqcal.templates.event_edit(object) + jqcal.templates.event_edit_buttons({});
 		
 		if(plugin.get('edit_dialog')) {
 			// create the qtip window
@@ -3356,7 +3356,7 @@ AgendaCreateView = Backbone.View.extend({
 		_.each(jqcal.colors, function(color) {
 			object.colors.push({color: color});
 		});
-		var template = jqcal.templates.agenda_create(object);
+		var template = jqcal.templates.agenda_create(object) + jqcal.templates.agenda_create_buttons({});
 		
 		// create the qtip window
 		$('#jqcal_agendas_new_button').qtip({
@@ -3477,7 +3477,7 @@ AgendaReadView = Backbone.View.extend({
 				}
 			}
 		});
-		var template = jqcal.templates.agenda_read(object);
+		var template = jqcal.templates.agenda_read(object) + jqcal.templates.agenda_read_buttons({});
 		
 		// create the qtip window
 		this.model.get('view').$el.qtip({
@@ -3560,7 +3560,7 @@ AgendaEditView = Backbone.View.extend({
 				object[attribute.name] = self.model.get(attribute.name);
 			}
 		});
-		var template = jqcal.templates.agenda_edit(object);
+		var template = jqcal.templates.agenda_edit(object) + jqcal.templates.agenda_edit_buttons({});
 		
 		if($('.jqcal').data('plugin').get('edit_dialog')) {
 			// create the qtip window

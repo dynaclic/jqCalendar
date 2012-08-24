@@ -116,7 +116,9 @@ jqcal.templates = {
 			'<option value="{{label}}">{{label}}</option>'+
 			'{{/agendas}}'+
 		'</select><br />'+
-		'<label for="jqcal_event_create_recurrency">Recurrency: </label><input type="checkbox" id="jqcal_event_create_recurrency" name="jqcal_event_create_recurrency" /><br />'+
+		'<label for="jqcal_event_create_recurrency">Recurrency: </label><input type="checkbox" id="jqcal_event_create_recurrency" name="jqcal_event_create_recurrency" /><br />'
+	,
+	event_create_buttons:
 		'<button id="jqcal_event_create_create">Create</button>'+
 		'<button id="jqcal_event_create_cancel">Cancel</button>'+
 		'<button id="jqcal_event_create_edit">Edit</button>'
@@ -125,7 +127,9 @@ jqcal.templates = {
 		'{{starts_at}} - {{ends_at}}<br />'+
 		'Label: {{label}}<br />'+
 		'Description: {{description}}<br />'+
-		'Agenda: {{agenda}}<br />'+
+		'Agenda: {{agenda}}<br />'
+	,
+	event_read_buttons:
 		'<button id="jqcal_event_read_delete">Delete</button>'+
 		'<button id="jqcal_event_read_close">Close</button>'+
 		'<button id="jqcal_event_read_edit">Edit</button>'
@@ -138,7 +142,9 @@ jqcal.templates = {
 		'<label for="jqcal_event_edit_description">Description: </label><textarea id="jqcal_event_edit_description" name="jqcal_event_edit_description">{{description}}</textarea><br />'+
 		'<label for="jqcal_event_edit_agenda">Agenda: </label><select id="jqcal_event_edit_agenda" name="jqcal_event_edit_agenda">{{#agendas}}<option value={{agenda}}>{{agenda}}</option>{{/agendas}}</select><br />'+
 		'<label for="jqcal_event_edit_color">Color: </label><select id="jqcal_event_edit_color" name="jqcal_event_edit_color">{{#colors}}<option value="{{color}}">#{{color}}</option>{{/colors}}</select><br />'+
-		'<label for="jqcal_event_edit_recurrency">Recurrency: </label><input type="checkbox" id="jqcal_event_edit_recurrency" name="jqcal_event_edit_recurrency" /><br />'+
+		'<label for="jqcal_event_edit_recurrency">Recurrency: </label><input type="checkbox" id="jqcal_event_edit_recurrency" name="jqcal_event_edit_recurrency" /><br />'
+	,
+	event_edit_buttons:
 		'<button id="jqcal_event_edit_save">Save</button>'+
 		'<button id="jqcal_event_edit_cancel">Cancel</button>'
 	,
@@ -155,7 +161,9 @@ jqcal.templates = {
 		'<label for="jqcal_agenda_create_description">Description: </label><textarea id="jqcal_agenda_create_description" name="jqcal_agenda_create_description"></textarea><br />'+
 		'<label for="jqcal_agenda_create_color">Color: </label><select id="jqcal_agenda_create_color" name="jqcal_agenda_create_color">{{#colors}}<option value="{{color}}">#{{color}}</option>{{/colors}}</select><br />'+
 		'<label for="jqcal_agenda_create_transparency_past">Transparency for past events: </label><input type="checkbox" id="jqcal_agenda_create_transparency_past" name="jqcal_agenda_create_transparency_past" /><br />'+
-		'<label for="jqcal_agenda_create_transparency_recurrency">Transparency for occurrences: </label><input type="checkbox" id="jqcal_agenda_create_transparency_recurrency" name="jqcal_agenda_create_transparency_recurrency" /><br />'+
+		'<label for="jqcal_agenda_create_transparency_recurrency">Transparency for occurrences: </label><input type="checkbox" id="jqcal_agenda_create_transparency_recurrency" name="jqcal_agenda_create_transparency_recurrency" /><br />'
+	,
+	agenda_create_buttons:
 		'<button id="jqcal_agenda_create_create">Create</button>'+
 		'<button id="jqcal_agenda_create_cancel">Cancel</button>'
 	,
@@ -164,7 +172,9 @@ jqcal.templates = {
 		'Description: {{description}}<br />'+
 		'Color: <div class="jqcal_agenda_read_button" style="width:15px; height:15px; border: 1px solid black; background-color:{{color}}; display: inline-block;"></div><br />'+
 		'Opacity for past events: {{transparency_past}}<br />'+
-		'Opacity for occurrences: {{transparency_recurrency}}<br />'+
+		'Opacity for occurrences: {{transparency_recurrency}}<br />'
+	,
+	agenda_read_buttons:
 		'<button id="jqcal_agenda_read_delete">Delete</button>'+
 		'<button id="jqcal_agenda_read_close">Close</button>'+
 		'<button id="jqcal_agenda_read_edit">Edit</button>'
@@ -174,7 +184,9 @@ jqcal.templates = {
 		'<label for="jqcal_agenda_edit_description">Description: </label><textarea id="jqcal_agenda_edit_description" name="jqcal_agenda_edit_description">{{description}}</textarea><br />'+
 		'<label for="jqcal_agenda_edit_color">Color: </label><select id="jqcal_agenda_edit_color" name="jqcal_agenda_edit_color">{{#colors}}<option value="{{color}}">#{{color}}</option>{{/colors}}</select><br />'+
 		'<label for="jqcal_agenda_edit_transparency_past">Transparency for past events: </label><input type="checkbox" id="jqcal_agenda_edit_transparency_past" name="jqcal_agenda_edit_transparency_past" /><br />'+
-		'<label for="jqcal_agenda_edit_transparency_recurrency">Transparency for occurrences: </label><input type="checkbox" id="jqcal_agenda_edit_transparency_recurrency" name="jqcal_agenda_edit_transparency_recurrency" /><br />'+
+		'<label for="jqcal_agenda_edit_transparency_recurrency">Transparency for occurrences: </label><input type="checkbox" id="jqcal_agenda_edit_transparency_recurrency" name="jqcal_agenda_edit_transparency_recurrency" /><br />'
+	,
+	agenda_edit_buttons:
 		'<button id="jqcal_agenda_edit_save">Save</button>'+
 		'<button id="jqcal_agenda_edit_cancel">Cancel</button>'
 	,
