@@ -5,8 +5,23 @@ Plugin = Backbone.Model.extend({
 			var dialog = $('#jqcal_event_create').data('view');
 			dialog.model.get('view').$el.qtip('destroy');
 			if(!$('#jqcal_event_edit').data('view')) {
-				dialog.model.unbindTimeslots();
-				dialog.model.get('view').remove();
+				if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+					var toRender = dialog.model.unbindTimeslots();
+					dialog.model.get('view').remove();
+					$('.jqcal').data('planning').get('view').parse_weeks(toRender);
+				}
+				else {
+					if(dialog.model.get('full_day')){
+						var this_model = dialog.model;
+						_.each($('.jqcal').data('planning').get('days').models, function(day){
+							day.get('fullTimeSlot').get('events').remove(this_model);
+						});
+						$('.jqcal').data('planning').get('view').parse_full_day();
+					}
+					var toRender = dialog.model.unbindTimeslots();
+					dialog.model.get('view').remove();
+					$('.jqcal').data('planning').get('view').parse_days(toRender);
+				}
 				$('.'+dialog.model.cid).remove();
 			}
 			$('#jqcal_event_create').data('view', '');
@@ -27,8 +42,23 @@ Plugin = Backbone.Model.extend({
 				}).html('')
 			}
 			if(!dialog.model.get('agenda')) {
-				dialog.model.unbindTimeslots();
-				dialog.model.get('view').remove();
+				if($('.jqcal').data('planning').get('format') == 'month' || $('.jqcal').data('planning').get('format') == 'custom_week'){
+					var toRender = dialog.model.unbindTimeslots();
+					dialog.model.get('view').remove();
+					$('.jqcal').data('planning').get('view').parse_weeks(toRender);
+				}
+				else {
+					if(dialog.model.get('full_day')){
+						var this_model = dialog.model;
+						_.each($('.jqcal').data('planning').get('days').models, function(day){
+							day.get('fullTimeSlot').get('events').remove(this_model);
+						});
+						$('.jqcal').data('planning').get('view').parse_full_day();
+					}
+					var toRender = dialog.model.unbindTimeslots();
+					dialog.model.get('view').remove();
+					$('.jqcal').data('planning').get('view').parse_days(toRender);
+				}
 				$('.'+dialog.model.cid).remove();
 			}
 			$('#jqcal_event_edit').data('view', '');
