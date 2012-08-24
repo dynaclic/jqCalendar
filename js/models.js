@@ -391,7 +391,7 @@ Event = Backbone.Model.extend({
 			}
 			// set the event's color to the agenda's default color if no color has been specified
 			if(!this.get('color')) {
-				this.set('color', agenda.get('color'), {silent: true});
+				this.set('color', agenda.get('color'));
 			}
 		}
 	},
