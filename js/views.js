@@ -6,11 +6,13 @@ PluginView = Backbone.View.extend({
 	},
 	render: function() {
 		// instantiate the template
-		var top_button = $(window).height()/1.5;
+		console.log($('#jqcal_menu hr'));
+		var top_button = $(window).height()/2;
 		var left_calendar = 220;
 		var left_button = 200;
 		
 		var template = jqcal.templates.plugin({
+			ressources_path: this.model.get('ressources_path'),
 			select_days: [
 				{value: 2},
 				{value: 3},
@@ -38,11 +40,13 @@ PluginView = Backbone.View.extend({
 			if($('#jqcal_menu').is(':visible')){
 				$('#jqcal_menu').hide();
 				$(this).offset({left: 10});
+				$(this).attr('src', $('.jqcal').data('plugin').get('ressources_path') + '/rightarrow.gif');
 				$('#jqcal_calendar').css('marginLeft', 30);
 			}
 			else{
 				$('#jqcal_menu').show();
 				$(this).offset({left: left_button});
+				$(this).attr('src', $('.jqcal').data('plugin').get('ressources_path') + '/leftarrow.gif');
 				$('#jqcal_calendar').css('marginLeft', left_calendar);
 			}
 			$('.jqcal').data('planning').get('view').render();
@@ -1233,7 +1237,7 @@ EventView = Backbone.View.extend({
 				}
 			}
 		}
-		
+		this.setTemplate();
 		// for the events in the planning (#jqcal_timeslots)
 		if(timeSlot_view = this.model.get('timeSlot_view')) {
 			var toDisplay = [];
@@ -3143,7 +3147,7 @@ EventEditView = Backbone.View.extend({
 						
 						// activate the color picker
 						$('[name = jqcal_event_edit_color]').colourPicker({
-							ico: './dependencies/jquery.colourPicker.gif',
+							ico: $('.jqcal').data('plugin').get('ressources_path') + '/jquery.colourPicker.gif',
 							title: 'Pick a color.'
 						});
 						$('#jquery-colour-picker').css('zIndex', 15001);

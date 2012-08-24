@@ -210,7 +210,8 @@ var jqcal = new function() {
 				agenda_removed	: this.opt.agenda_removed,
 				event_init_event: this.opt.event_init_event,
 				event_stop_event: this.opt.event_stop_event,
-				period_changed	: this.opt.period_changed
+				period_changed	: this.opt.period_changed,
+				ressources_path: this.opt.ressources_path
 			});
 			this.data('plugin', plugin);
 
@@ -482,6 +483,7 @@ var jqcal = new function() {
 		hidden_days		: [],
 		nb_days			: 3,
 		nb_weeks		: 3,
+		ressources_path: './dependencies',
 		event_created	: function(event) {return true;},
 		event_changed	: function(event) {return true;},
 		event_removed	: function(event) {return true;},

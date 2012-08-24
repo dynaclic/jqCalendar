@@ -22,7 +22,7 @@ jqcal.templates = {
 				'</select>'+
 			'</span>'+
 		'</div>'+
-		'<div id="jqcal_menu_button" style="position: absolute; top:{{top_button}}px; left: {{left_button}}px; width: 20px; height: 20px; cursor: e-resize; background-color: black; border-color: red; border-radius: 3px; border-style: groove;"></div>'+
+		'<img src="{{ressources_path}}/leftarrow.gif" id="jqcal_menu_button" style="position: absolute; top:{{top_button}}px; left: {{left_button}}px; cursor:pointer;"/>'+
 		'<div id="jqcal_menu" style="float:left; margin-top: 10px; width:200px;">'+
 			'Pick a date:<br /><br />'+
 			'<div id="jqcal_datepicker"></div><br /><hr />'+
@@ -96,7 +96,7 @@ jqcal.templates = {
 		'{{day}}'
 	,
 	agenda: 
-		'&nbsp;<div style="display: inline-block; border: 1px solid black; width:15px; height:15px; margin-top: 4px; background-color:{{color}}; "></div>'+
+		'&nbsp;<span style="display: inline-block; border: 1px solid black; width:15px; height:15px; margin-top: 4px; background-color:{{color}}; "></span>'+
 		'<span> {{label}}</span>'+
 		'<div class="jqcal_agenda_read_button" style="display: inline-block; width:15px; height:15px; margin-top: 4px; float: right; border: 1px solid black; display: none;"></div>'
 	,
