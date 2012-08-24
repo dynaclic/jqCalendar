@@ -1,7 +1,7 @@
 PluginView = Backbone.View.extend({
 	initialize: function() {
 		// add the jqcal class to the main element
-		this.$el.attr('class', this.$el.attr('class') ? this.$el.attr('class')+' jqcal' : 'jqcal');
+		this.$el.attr('class', this.$el.attr('class') ? this.$el.attr('class')+' jqcal yui3-cssreset' : 'jqcal yui3-cssreset');
 		this.render();
 	},
 	render: function() {
