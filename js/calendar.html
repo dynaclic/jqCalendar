@@ -40,11 +40,11 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 		
-	/*	jqcal.templates.event += '<br />{{people}}';
+		jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
-			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
+			'<br />Gender: <select id="jqcal_event_create_gender" name="jqcal_event_create_gender"><option value="M">M</option><option value="F">F</option></select>';
 		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
-			'<br />Gender: <input type="radio" name="jqcal_event_edit_gender" value="M" /> M<input type="radio" name="jqcal_event_edit_gender" value="F" /> F';
+			'<br />Gender: <select id="jqcal_event_edit_gender" name="jqcal_event_edit_gender"><option value="M">M</option><option value="F">F</option></select>';
 		jqcal.templates.event_read += '<br />Unique: {{unique}}<br />Gender: {{gender}}';
 		jqcal.event.push({
 			name: 'people',
@@ -61,13 +61,12 @@
 		}, {
 			name: 'gender',
 			elements: ['create', 'read', 'edit'],
-			type: 'radio',
 			check: function(val) {
 				if(!val) {
 					return false;
 				}
 			}
-		});*/
+		});
 		
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
@@ -86,9 +85,9 @@
 			nb_weeks		: 3/*,
 			agenda_created	: function(agenda) {console.log('agenda created:');console.log(agenda);},
 			agenda_changed	: function(agenda) {console.log('agenda changed:');console.log(agenda);},
-			agenda_removed	: function(agenda) {console.log('agenda removed:');console.log(agenda);},
+			agenda_removed	: function(agenda) {console.log('agenda removed:');console.log(agenda);}*/,
 			event_created	: function(event) {console.log('event created:');console.log(event);},
-			event_changed	: function(event) {console.log('event changed:');console.log(event);},
+			event_changed	: function(event) {console.log('event changed:');console.log(event);}/*,
 			event_removed	: function(event) {console.log('event removed:');console.log(event);},
 			event_init_event: function(event, action) {console.log('event init event:');console.log(event);console.log(action);},
 			event_stop_event: function(event, action) {console.log('event stop event:');console.log(event);console.log(action);},
@@ -124,36 +123,6 @@
 					{
 						starts_at: event14,
 						ends_at: jqcal.time.addHours(event14, 72),
-						full_day: true
-					}
-				]
-			},
-			{
-				label: 'b',
-				color: '#6495ED',
-				events: [
-					{
-						starts_at: event3,
-						ends_at: jqcal.time.addHours(event3, 3)
-					}, /*{
-						starts_at: event4,
-						ends_at: jqcal.time.addHours(event4, 3)
-					}, {
-						starts_at: event5,
-						ends_at: jqcal.time.addHours(event5, 2.5)
-					}, {
-						starts_at: event8,
-						ends_at: jqcal.time.addHours(event8, 1)
-					}, {
-						starts_at: event10,
-						ends_at: jqcal.time.addHours(event10, 1)
-					}, {
-						starts_at: event11,
-						ends_at: jqcal.time.addHours(event11, 34)
-					}*/,
-					{
-						starts_at: event14,
-						ends_at: jqcal.time.addHours(event14, 48),
 						full_day: true
 					}
 				]

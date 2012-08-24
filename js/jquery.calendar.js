@@ -329,10 +329,10 @@ var jqcal = new function() {
 					
 					// instantiate the new agenda
 					if(!collection.where({label: agenda.label}).length) {
-						var new_agenda = new Agenda(agenda);
 						if(!_.has(agenda, 'color')) {
-							new_agenda.set('color', '#'+(function(h){return new Array(7-h.length).join("0")+h})((Math.random()*(0xFFFFFF+1)<<0).toString(16)));
+							agenda.color = '#'+(function(h){return new Array(7-h.length).join("0")+h})((Math.random()*(0xFFFFFF+1)<<0).toString(16));
 						}
+						var new_agenda = new Agenda(agenda);
 						
 						// push it
 						collection.push(new_agenda);

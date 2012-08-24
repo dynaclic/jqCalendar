@@ -343,35 +343,37 @@ Event = Backbone.Model.extend({
 				agenda.get('events').remove(this);
 				agenda.off('change:transparency_past change:transparency_recurrency', this.get('view').setOpacity);
 			}
-			else if(!this.get('id')) {
-				var collec = null;
-				if(this.collection && !$('.jqcal').data('agendas').where({events: this.collection}).length) {
-					//refaire collec
-					var collec = this.collection;
-					collec.remove(this);
+			else {
+				if(!this.get('id')) {
+					var collec = null;
+					if(this.collection && !$('.jqcal').data('agendas').where({events: this.collection}).length) {
+						//refaire collec
+						var collec = this.collection;
+						collec.remove(this);
+					}
+					// callback
+					var event = {
+						cid: this.cid,
+						label: this.get('label'),
+						description: this.get('description'),
+						agenda: this.get('agenda'),
+						color: this.get('color'),
+						starts_at: this.get('starts_at'),
+						ends_at: this.get('ends_at'),
+						fullDay: this.get('fullDay')
+					}
+					if(this.get('recurrency')) {
+						event.recurrency = this.get('recurrency');
+					}
+					if(this.get('id')) {
+						event.id = this.get('id');
+					}
+					var self = this;
+					_.each(jqcal.event, function(attribute) {
+						event[attribute.name] = self.get(attribute.name);
+					});
+					$('.jqcal').data('plugin').get('event_created')(event);
 				}
-				// callback
-				var event = {
-					cid: this.cid,
-					label: this.get('label'),
-					description: this.get('description'),
-					agenda: this.get('agenda'),
-					color: this.get('color'),
-					starts_at: this.get('starts_at'),
-					ends_at: this.get('ends_at'),
-					fullDay: this.get('fullDay')
-				}
-				if(this.get('recurrency')) {
-					event.recurrency = this.get('recurrency');
-				}
-				if(this.get('id')) {
-					event.id = this.get('id');
-				}
-				var self = this;
-				_.each(jqcal.event, function(attribute) {
-					event[attribute.name] = self.get(attribute.name);
-				});
-				$('.jqcal').data('plugin').get('event_created')(event);
 				
 				this.on('change', this.onChange);
 			}
@@ -389,7 +391,7 @@ Event = Backbone.Model.extend({
 			}
 			// set the event's color to the agenda's default color if no color has been specified
 			if(!this.get('color')) {
-				this.set('color', agenda.get('color'));
+				this.set('color', agenda.get('color'), {silent: true});
 			}
 		}
 	},
@@ -570,7 +572,7 @@ Event = Backbone.Model.extend({
 	},
 	onChange: function() {
 		var event = this.changedAttributes();
-		_.each(['id', 'view', 'timeSlot_view', 'fullTimeSlot_view'], function(attribute) {
+		_.each(['id', 'view', 'timeSlot_view', 'fullTimeSlot_view', 'daySlot_view'], function(attribute) {
 			delete event[attribute];
 		});
 		if(_.keys(event).length) {

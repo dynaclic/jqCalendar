@@ -3166,6 +3166,11 @@ EventEditView = Backbone.View.extend({
 						if(self.model.get('is_occurrence')) {
 							$('[name = jqcal_event_edit_recurrency]').hide();
 						}
+						
+						// set the selects
+						$('#jqcal_event_edit select').each(function() {
+							$(this).val(self.model.get($(this).attr('id').match(/_[^_]+$/).toString().substr(1)));
+						});
 					}
 				}
 			});
@@ -3612,6 +3617,11 @@ AgendaEditView = Backbone.View.extend({
 							else if(attribute.type == 'checkbox' && self.model.get(attribute.name)) {
 								$('[name = jqcal_event_edit_'+attribute.name+']').attr('checked', 'checked');
 							}
+						});
+						
+						// set the selects
+						$('#jqcal_agenda_edit select').each(function() {
+							$(this).val(self.model.get($(this).attr('id').match(/_[^_]+$/).toString().substr(1)));
 						});
 					}
 				}
