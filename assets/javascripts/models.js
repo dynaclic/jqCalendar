@@ -376,28 +376,38 @@ Event = Backbone.Model.extend({
 		}
 		$('.jqcal').data('plugin').get('event_removed')(event);
 		
-		// unbind this event from the fulltimeslots
-		if(this.get('fullDay')){
-			var self = this;
-			_.each(planning.get('days').models, function(day){
-				day.get('fullTimeSlot').get('events').remove(self);
-			});
-			this.get('view').remove();
-			this.collection.remove(this);
-			return [];
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+				$('.' + this.cid).remove();
+				var toRender = this.unbindTimeslots();
+				this.get('view').remove();
+				this.collection.remove(this);
+				return toRender;
 		}
 		else {
-			$('.' + this.cid).remove();
-			var toRender = this.unbindTimeslots();
-			this.get('view').remove();
-			this.collection.remove(this);
-			return toRender;
+			// unbind this event from the fulltimeslots
+			if(this.get('full_day')){
+				var self = this;
+				_.each(planning.get('days').models, function(day){
+					day.get('fullTimeSlot').get('events').remove(self);
+				});
+				this.get('view').remove();
+				this.collection.remove(this);
+				return [];
+			}
+			else {
+				$('.' + this.cid).remove();
+				var toRender = this.unbindTimeslots();
+				this.get('view').remove();
+				this.collection.remove(this);
+				return toRender;
+			}
 		}
 	},
 	removeView: function() {
 		this.unbindTimeslots();
 		this.unset('timeSlot_view');
 		this.unset('fullTimeSlot_view');
+		this.unset('daySlot_view');
 		var children = this.get('children').models;
 		for(var c in children){
 				children[c].removeView();
@@ -541,134 +551,179 @@ Event = Backbone.Model.extend({
 			$('.jqcal').data('plugin').get('event_changed')(event);
 		}
 	},
+	/*
+	 * bind un event sur un timeslot ou un dayslot
+	 *
+	 *
+	 */
 	bindTimeslots: function() {
-		//on ne bind pas les events fullday
-		if(this.get('fullDay')){
-			return [];
-		}
-		
-		//pour le render
-		this.get('view').$el.removeClass('unbind');
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
-		var days = planning.get('days');
 		
-		if(! this.get('timeSlot_view')){
-			var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
-		}
-		else {
-			var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
-		}
-		
-		if(!day) {
-			return -1;
-		}
-		else {
-			if(! this.get('timeSlot_view')){
-				var i = 0, timeSlots = day.get('timeSlots').models;
-				if(!(this.get('starts_at') < timeSlots[0].get('starts_at'))) {
-					while(this.get('starts_at') >= day.get('timeSlots').models[i].get('ends_at')) {
-						i++;
-					}
-				}
-				var j = _.indexOf(day.get('timeSlots').models, timeSlots[i]);
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+			this.get('view').$el.removeClass('unbind');
+			var weeks = planning.get('weeks');
+			
+			if(! this.get('daySlot_view')){
+				var week = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
 			}
 			else {
-				var j = _.indexOf(day.get('timeSlots').models, this.get('timeSlot_view').model);
+				var week = weeks.where({daySlots: this.get('daySlot_view').model.collection})[0]
 			}
-			var result = [day];
-			var result1 = [];
-			while(this.get('ends_at') >= day.get('timeSlots').models[j].get('ends_at')){
-				day.get('timeSlots').models[j].get('events').push(this);
-				result1 = _.union(result1, day.get('timeSlots').models[j].get('events').models);
-				
-				j++;
-				if(! day.get('timeSlots').models[j]) {
-						break;
+			if(!week) {
+				return [];
+			}
+			else {
+				if(! this.get('daySlot_view')){
+					var i = 0, daySlots = week.get('daySlots').models;
+					if(!(this.get('starts_at') < daySlots[0].get('starts_at'))) {
+						while(this.get('starts_at') >= daySlots[i].get('ends_at')) {
+							i++;
+						}
+					}
+					var j = _.indexOf(daySlots, daySlots[i]);
 				}
-			}
-			var children = this.get('children').models;
-			for(var c in children){
-				result = _.union(result, children[c].bindTimeslots());
-			}
-			return result;
-		}
-	},
-	unbindTimeslots: function() {
-		if(this.get('fullDay')){
-			return [];
-		}
-		
-		//pour le render 
-		this.get('view').$el.addClass('unbind');
-
-		if(this.previous('timeSlot_view')){
-			var plugin = $('.jqcal').data('plugin');
-			var planning = $('.jqcal').data('planning');
-			var days = planning.get('days');
-			var day = days.where({timeSlots: this.previous('timeSlot_view').model.collection})[0];
-			if(day){
-				var i = _.indexOf(day.get('timeSlots').models, this.previous('timeSlot_view').model);
-				var result = [day];
-				var all_events = [];
-				while(this.previous('ends_at') >= day.get('timeSlots').models[i].get('ends_at')){
-					all_events = _.union(all_events, day.get('timeSlots').models[i].get('events').models);
-					day.get('timeSlots').models[i].get('events').remove(this);
-					i++;
-					if(! day.get('timeSlots').models[i]) {
+				else {
+					var j = _.indexOf(week.get('daySlots').models, this.get('daySlot_view').model);
+				}
+				var result = [week];
+				while(this.get('ends_at') > week.get('daySlots').models[j].get('starts_at')){
+					week.get('daySlots').models[j].get('events').push(this);	
+					j++;
+					if(! week.get('daySlots').models[j]) {
 							break;
 					}
 				}
-				
 				var children = this.get('children').models;
 				for(var c in children){
-					result = _.union(result, children[c].unbindTimeslots());
+					result = _.union(result, children[c].bindTimeslots());
 				}
 				return result;
 			}
-			else{
+		}
+		else {
+			//on ne bind pas les events full_day
+			if(this.get('full_day')){
+				return [];
+			}
+			this.get('view').$el.removeClass('unbind');
+			var days = planning.get('days');
+			
+			if(! this.get('timeSlot_view')){
+				var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
+			}
+			else {
+				var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
+			}
+			
+			if(!day) {
+				return [];
+			}
+			else {
+				if(! this.get('timeSlot_view')){
+					var i = 0, timeSlots = day.get('timeSlots').models;
+					if(!(this.get('starts_at') < timeSlots[0].get('starts_at'))) {
+						while(this.get('starts_at') >= day.get('timeSlots').models[i].get('ends_at')) {
+							i++;
+						}
+					}
+					var j = _.indexOf(day.get('timeSlots').models, timeSlots[i]);
+				}
+				else {
+					var j = _.indexOf(day.get('timeSlots').models, this.get('timeSlot_view').model);
+				}
+				var result = [day];
+				var result1 = [];
+				while(this.get('ends_at') >= day.get('timeSlots').models[j].get('ends_at')){
+					day.get('timeSlots').models[j].get('events').push(this);
+					result1 = _.union(result1, day.get('timeSlots').models[j].get('events').models);
+					
+					j++;
+					if(! day.get('timeSlots').models[j]) {
+							break;
+					}
+				}
+				var children = this.get('children').models;
+				for(var c in children){
+					result = _.union(result, children[c].bindTimeslots());
+				}
+				return result;
+			}
+		}
+	},
+	unbindTimeslots: function() {
+		var planning = $('.jqcal').data('planning');
+		var plugin = $('.jqcal').data('plugin');
+
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+			//pour le render 
+			this.get('view').$el.addClass('unbind');
+			
+			if(this.previous('daySlot_view')){
+				var weeks = planning.get('weeks');
+				var week = weeks.where({daySlots: this.previous('daySlot_view').model.collection})[0];
+				if(week){
+					var i = _.indexOf(week.get('daySlots').models, this.previous('daySlot_view').model);
+					var result = [week];
+					var all_events = [];
+					while(this.previous('ends_at') > week.get('daySlots').models[i].get('starts_at')){
+						all_events = _.union(all_events, week.get('daySlots').models[i].get('events').models);
+						week.get('daySlots').models[i].get('events').remove(this);
+						i++;
+						if(! week.get('daySlots').models[i]) {
+								break;
+						}
+					}
+					
+					var children = this.get('children').models;
+					for(var c in children){
+						result = _.union(result, children[c].unbindTimeslots());
+					}
+					return result;
+				}
+				else{
+					return [];
+				}
+			}
+			else {
 				return [];
 			}
 		}
 		else {
-			return [];
-		}
-	},
-	unbindAllExtended: function() { //inutile a supprimer
-		var planning = $('.jqcal').data('planning');
-		var days = planning.get('days');
-		var i = 0;
-		var all_events = [];
-		
-		while(i < days.models.length){
-			var timeslots = days.models[i].get('timeSlots').models;
-			for(var t in timeslots){
-				var events = timeslots[t].get('events').models;
-				for(var e in events){
-				//	if(events[e].get('super_model') == this) {
-						all_events = _.union(all_events, events[e]);			
-				//	}
+			if(this.get('full_day')){
+				return [];
+			}
+			//pour le render 
+			this.get('view').$el.addClass('unbind');
+			if(this.previous('timeSlot_view')){
+				var days = planning.get('days');
+				var day = days.where({timeSlots: this.previous('timeSlot_view').model.collection})[0];
+				if(day){
+					var i = _.indexOf(day.get('timeSlots').models, this.previous('timeSlot_view').model);
+					var result = [day];
+					var all_events = [];
+					while(this.previous('ends_at') >= day.get('timeSlots').models[i].get('ends_at')){
+						all_events = _.union(all_events, day.get('timeSlots').models[i].get('events').models);
+						day.get('timeSlots').models[i].get('events').remove(this);
+						i++;
+						if(! day.get('timeSlots').models[i]) {
+								break;
+						}
+					}
+					
+					var children = this.get('children').models;
+					for(var c in children){
+						result = _.union(result, children[c].unbindTimeslots());
+					}
+					return result;
+				}
+				else{
+					return [];
 				}
 			}
-			i++;
-		}	
-		
-		var extended = all_events;
-		for(var e in extended){
-			extended[e].unbindTimeslots();
-		}
-		
-		while(i < days.models.length){
-			var timeslots = days.models[i].get('timeSlots').models;
-			for(var t in timeslots){
-				var events = timeslots[t].get('events').models;
-				for(var e in events){
-				//	if(events[e].get('super_model') == this) {
-						all_events = _.union(all_events, events[e]);			
-				//	}
-				}
+			else {
+				return [];
 			}
-			i++;
 		}
 	}
 });
@@ -676,6 +731,7 @@ Event = Backbone.Model.extend({
 EventExtended = Event.extend({
 	removeView: function() {
 		this.unset('timeSlot_view');
+		this.unset('daySlot_view');
 	},
 	remove: function() {
 		this.get('super_model').unbind('change:color', this.setColor);
@@ -684,47 +740,92 @@ EventExtended = Event.extend({
 	bindTimeslots: function() {
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
-		var days = planning.get('days');
-
-		if(! this.get('timeSlot_view')){
-			var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
-		}
-		else {
-			var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
-		}
 		
-		if(!day) {
-			return -1;
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+			var weeks = planning.get('weeks');
+			
+			if(! this.get('timeSlot_view')){
+				var week = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
+			}
+			else {
+				var week = weeks.where({daySlots: this.get('daySlot_view').model.collection})[0]
+			}
+			
+			if(!week) {
+				return [];
+			}
+			else {
+				var i = 0;
+				while(this.get('ends_at') >= week.get('daySlots').models[i].get('ends_at')){
+					week.get('daySlots').models[i].get('events').push(this);
+					i++;
+					if(! week.get('daySlots').models[i]) {
+							break;
+					}
+				}
+				return week;
+			}
 		}
 		else {
-			var i = 0;
-			var result1 = [];
-			while(this.get('ends_at') >= day.get('timeSlots').models[i].get('ends_at')){
-				day.get('timeSlots').models[i].get('events').push(this);
-				result1 = _.union(result1, day.get('timeSlots').models[i].get('events').models);
-				i++;
-				if(! day.get('timeSlots').models[i]) {
-						break;
-				}
+			var days = planning.get('days');
+			
+			if(! this.get('timeSlot_view')){
+				var day = jqcal.time.inPlanning(this.get('starts_at'), this.get('ends_at'), planning, plugin);
 			}
-			return day;
+			else {
+				var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0]
+			}
+			
+			if(!day) {
+				return -1;
+			}
+			else {
+				var i = 0;
+				var result1 = [];
+				while(this.get('ends_at') >= day.get('timeSlots').models[i].get('ends_at')){
+					day.get('timeSlots').models[i].get('events').push(this);
+					result1 = _.union(result1, day.get('timeSlots').models[i].get('events').models);
+					i++;
+					if(! day.get('timeSlots').models[i]) {
+							break;
+					}
+				}
+				return day;
+			}
 		}
 	},
 	unbindTimeslots: function() {
 		var plugin = $('.jqcal').data('plugin');
 		var planning = $('.jqcal').data('planning');
-		var days = planning.get('days');
-		if(this.get('timeSlot_view')){
-			var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0];
-			var i = 0;
-			while(day.get('timeSlots').models[i]){
-				day.get('timeSlots').models[i].get('events').remove(this);
-				i++;
+		if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
+			var weeks = planning.get('weeks');
+			if(this.get('daySlot_view')){
+				var week = weeks.where({daySlots: this.get('daySlot_view').model.collection})[0];
+				var i = 0;
+				while(week.get('daySlots').models[i]){
+					week.get('daySlots').models[i].get('events').remove(this);
+					i++;
+				}
+				return week;
 			}
-			return day;
+			else {
+				this.remove();
+			}
 		}
 		else {
-			this.remove();
+			var days = planning.get('days');
+			if(this.get('timeSlot_view')){
+				var day = days.where({timeSlots: this.get('timeSlot_view').model.collection})[0];
+				var i = 0;
+				while(day.get('timeSlots').models[i]){
+					day.get('timeSlots').models[i].get('events').remove(this);
+					i++;
+				}
+				return day;
+			}
+			else {
+				this.remove();
+			}
 		}
 	}	
 });

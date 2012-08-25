@@ -3,20 +3,20 @@
 <head>
 	<script type="text/javascript" src="vendor/assets/javascripts/jquery-1.7.2.min.js"></script>
 	<script type="text/javascript" src="vendor/plugins/jquery-ui-1.8.22.custom.min.js"></script>
+	<link rel=StyleSheet href="vendor/plugins/ui-lightness/jquery-ui-1.8.22.custom.css">
 	<script type="text/javascript" src="vendor/assets/javascripts/underscore-min.js"></script>
 	<script type="text/javascript" src="vendor/assets/javascripts/backbone-min.js"></script>
 	<script type="text/javascript" src="vendor/assets/javascripts/handlebars-1.0.0.beta.6.js"></script>
 	<script type="text/javascript" src="vendor/plugins/jquery.qtip.min.js"></script>
 	<script type="text/javascript" src="vendor/plugins/jquery.colourPicker.js"></script>
+	<link rel=StyleSheet href="vendor/plugins/jquery.colourPicker.css">
+	<link rel=StyleSheet href="vendor/plugins/jquery.qtip.min.css">
 	<script type="text/javascript" src="assets/javascripts/jquery.calendar.js"></script>
 	<script type="text/javascript" src="assets/javascripts/models.js"></script>
 	<script type="text/javascript" src="assets/javascripts/collections.js"></script>
 	<script type="text/javascript" src="assets/javascripts/views.js"></script>
 	<script type="text/javascript" src="assets/javascripts/templates.js"></script>
 	<link rel=StyleSheet href="assets/stylesheets/style.css">
-	<link rel=StyleSheet href="vendor/plugins/ui-lightness/jquery-ui-1.8.22.custom.css">
-	<link rel=StyleSheet href="vendor/plugins/jquery.colourPicker.css">
-	<link rel=StyleSheet href="vendor/plugins/jquery.qtip.min.css">
 </head>
 <body>
 	<div id="calendar"></div>
@@ -40,7 +40,7 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 
-		/*jqcal.templates.event += '<br />{{people}}';
+	/*	jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
 			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
 		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
@@ -93,7 +93,7 @@
 			event_init_event: function(event, action) {console.log('event init event:');console.log(event);console.log(action);},
 			event_stop_event: function(event, action) {console.log('event stop event:');console.log(event);console.log(action);},
 			period_changed	: function(starts_at, ends_at) {console.log('period changed:'); console.log(new Date(starts_at)); console.log(new Date(ends_at));}*/
-		})/*.jqcal('add', [
+		}).jqcal('add', [
 			{
 				label: 'a',
 				description: 'some random description',
@@ -102,7 +102,7 @@
 					{
 						starts_at: event1,
 						ends_at: jqcal.time.addHours(event1, 6)
-					}, {
+					}, /*{
 						starts_at: event2,
 						ends_at: jqcal.time.addHours(event2, 3.5)
 					}, {
@@ -120,11 +120,11 @@
 					}, {
 						starts_at: event13,
 						ends_at: jqcal.time.addHours(event13, 2)
-					},
+					},*/
 					{
 						starts_at: event14,
 						ends_at: jqcal.time.addHours(event14, 72),
-						fullDay: true
+						full_day: true
 					}
 				]
 			},
@@ -135,7 +135,7 @@
 					{
 						starts_at: event3,
 						ends_at: jqcal.time.addHours(event3, 3)
-					}, {
+					}, /*{
 						starts_at: event4,
 						ends_at: jqcal.time.addHours(event4, 3)
 					}, {
@@ -150,15 +150,15 @@
 					}, {
 						starts_at: event11,
 						ends_at: jqcal.time.addHours(event11, 34)
-					},
+					}*/,
 					{
 						starts_at: event14,
 						ends_at: jqcal.time.addHours(event14, 48),
-						fullDay: true
+						full_day: true
 					}
 				]
 			}
-		])*/;
+		]);
 		/*$('#calendar').jqcal('bindIds', {
 			'c258': 10,
 			'c260': 15,

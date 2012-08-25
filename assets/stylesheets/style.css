@@ -17,3 +17,8 @@ div.ui-datepicker{
 	font-size:11px;
 }
 
+#jqcal_dayslots td
+{
+	height: 120px;
+}
+
