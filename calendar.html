@@ -1,22 +1,22 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<script type="text/javascript" src="./dependencies/jquery-1.7.2.min.js"></script>
-	<script type="text/javascript" src="./dependencies/jquery-ui-1.8.22.custom.min.js"></script>
-	<link rel=StyleSheet href="./dependencies/ui-lightness/jquery-ui-1.8.22.custom.css">
-	<script type="text/javascript" src="./dependencies/underscore-min.js"></script>
-	<script type="text/javascript" src="./dependencies/backbone-min.js"></script>
-	<script type="text/javascript" src="./dependencies/handlebars-1.0.0.beta.6.js"></script>
-	<script type="text/javascript" src="./dependencies/jquery.qtip.min.js"></script>
-	<script type="text/javascript" src="./dependencies/jquery.colourPicker.js"></script>
-	<link rel=StyleSheet href="./dependencies/jquery.colourPicker.css">
-	<link rel=StyleSheet href="./dependencies/jquery.qtip.min.css">
-	<script type="text/javascript" src="./jquery.calendar.js"></script>
-	<script type="text/javascript" src="./models.js"></script>
-	<script type="text/javascript" src="./collections.js"></script>
-	<script type="text/javascript" src="./views.js"></script>
-	<script type="text/javascript" src="./templates.js"></script>
-	<link rel=StyleSheet href="./style.css">
+	<script type="text/javascript" src="vendor/assets/javascripts/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" src="vendor/plugins/jquery-ui-1.8.22.custom.min.js"></script>
+	<link rel=StyleSheet href="vendor/plugins/ui-lightness/jquery-ui-1.8.22.custom.css">
+	<script type="text/javascript" src="vendor/assets/javascripts/underscore-min.js"></script>
+	<script type="text/javascript" src="vendor/assets/javascripts/backbone-min.js"></script>
+	<script type="text/javascript" src="vendor/assets/javascripts/handlebars-1.0.0.beta.6.js"></script>
+	<script type="text/javascript" src="vendor/plugins/jquery.qtip.min.js"></script>
+	<script type="text/javascript" src="vendor/plugins/jquery.colourPicker.js"></script>
+	<link rel=StyleSheet href="vendor/plugins/jquery.colourPicker.css">
+	<link rel=StyleSheet href="vendor/plugins/jquery.qtip.min.css">
+	<script type="text/javascript" src="assets/javascripts/jquery.calendar.js"></script>
+	<script type="text/javascript" src="assets/javascripts/models.js"></script>
+	<script type="text/javascript" src="assets/javascripts/collections.js"></script>
+	<script type="text/javascript" src="assets/javascripts/views.js"></script>
+	<script type="text/javascript" src="assets/javascripts/templates.js"></script>
+	<link rel=StyleSheet href="assets/stylesheets/style.css">
 </head>
 <body>
 	<div id="calendar"></div>
@@ -39,7 +39,7 @@
 		event12 = new Date(('2012/08/24 12:00:00')).getTime();
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
-		
+
 	/*	jqcal.templates.event += '<br />{{people}}';
 		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
 			'<br />Gender: <input type="radio" name="jqcal_event_create_gender" value="M" /> M<input type="radio" name="jqcal_event_create_gender" value="F" /> F';
@@ -68,7 +68,7 @@
 				}
 			}
 		});*/
-		
+
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
 			no_perm_event	: ['edit', 'create', 'delete', 'read'],*/
@@ -166,6 +166,6 @@
 		});
 		$('#calendar').jqcal('removeIds', [15]);*/
 	});
-	
+
 </script>
 </html>
