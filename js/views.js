@@ -5,14 +5,11 @@ PluginView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
-		// instantiate the template
-		console.log($('#jqcal_menu hr'));
-		var top_button = $(window).height()/2;
 		var left_calendar = 220;
 		var left_button = 200;
-		
+		// instantiate the template
 		var template = jqcal.templates.plugin({
-			ressources_path: this.model.get('ressources_path'),
+			path: this.model.get('path'),
 			select_days: [
 				{value: 2},
 				{value: 3},
@@ -28,25 +25,27 @@ PluginView = Backbone.View.extend({
 				{value: 6}
 			],
 			left_calendar: left_calendar,
-			left_button: left_button,
-			top_button: top_button
+			left_button: left_button
 		});
+		
 		
 		// display the view
 		this.$el.html(template);
+		var toptop = $('#jqcal_menu').position().top + $('#jqcal_menu').height() + $('#jqcal_menu hr').position().top;
+		$('#jqcal_menu_button').offset({ top: toptop + 10});//$(window).height()/2;
 		
 		//toggle
 		$('#jqcal_menu_button').click(function() {
 			if($('#jqcal_menu').is(':visible')){
 				$('#jqcal_menu').hide();
 				$(this).offset({left: 10});
-				$(this).attr('src', $('.jqcal').data('plugin').get('ressources_path') + '/rightarrow.gif');
+				$(this).attr('src', $('.jqcal').data('plugin').get('path') + 'rightarrow.gif');
 				$('#jqcal_calendar').css('marginLeft', 30);
 			}
 			else{
 				$('#jqcal_menu').show();
 				$(this).offset({left: left_button});
-				$(this).attr('src', $('.jqcal').data('plugin').get('ressources_path') + '/leftarrow.gif');
+				$(this).attr('src', $('.jqcal').data('plugin').get('path') + 'leftarrow.gif');
 				$('#jqcal_calendar').css('marginLeft', left_calendar);
 			}
 			$('.jqcal').data('planning').get('view').render();
@@ -1536,6 +1535,9 @@ EventView = Backbone.View.extend({
 				});
 			}
 		}
+		if($.browser.msie){
+			this.setTemplate();
+		}
 	},
 	events: {
 		'mousedown' : 'down'
@@ -2370,8 +2372,6 @@ EventExtendedView = Backbone.View.extend({
 			var daySlot_view = arg.week.get('daySlots').models[0].get('view');
 				
 			// apply the css
-			console.log('daySlot_view extended :');
-			console.log(daySlot_view);
 			
 			//border
 			this.$el.css('border', '1px');
@@ -2839,6 +2839,7 @@ EventCreateView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
+		$('#jqcal_event_create').show();
 		// get the plugin | planning
 		var plugin = $('.jqcal').data('plugin');
 		
@@ -3087,6 +3088,7 @@ EventEditView = Backbone.View.extend({
 		this.render();
 	},
 	render: function() {
+		$('#jqcal_event_edit').show();
 		// get the plugin
 		var plugin = $('.jqcal').data('plugin');
 	
@@ -3147,7 +3149,7 @@ EventEditView = Backbone.View.extend({
 						
 						// activate the color picker
 						$('[name = jqcal_event_edit_color]').colourPicker({
-							ico: $('.jqcal').data('plugin').get('ressources_path') + '/jquery.colourPicker.gif',
+							ico: $('.jqcal').data('plugin').get('path') + 'jquery.colourPicker.gif',
 							title: 'Pick a color.'
 						});
 						$('#jquery-colour-picker').css('zIndex', 15001);
@@ -3300,9 +3302,9 @@ EventDeleteView = Backbone.View.extend({
 			hide: false,
 			position: {
 				container: this.$el,
-				my: 'bottom left',
+				my: 'center',
 				viewport: $(window),
-				at: 'top right'
+				at: 'center'
 			},
 			style: {
 				classes: 'ui-tooltip-shadow ui-tooltip-light'
@@ -3319,9 +3321,11 @@ EventDeleteView = Backbone.View.extend({
 			switch($('[name = jqcal_event_delete]:checked').val()) {
 				case 'all':
 					var cid = this.model.get('is_occurrence') || this.model.cid;
-					_.each(_.union(this.model.collection.where({is_occurrence: cid}), this.model.collection.getByCid(cid)), function(event) {
+					var main_event = this.model.collection.getByCid(cid);
+					_.each(this.model.collection.where({is_occurrence: cid}), function(event) {
 						event.remove();
 					});
+					main_event.remove();
 					break;
 				case 'part':
 					var ends_at = this.model.get('ends_at');
@@ -3338,7 +3342,7 @@ EventDeleteView = Backbone.View.extend({
 					break;
 			}
 			$('.jqcal').data('plugin').removeDialogs();
-			$('.jqcal').data('planning').get('view').parse_days(days);
+			$('.jqcal').data('planning').get('view').parse_each_day();
 		}
 		else if(action == 'cancel') {
 			$('.jqcal').data('plugin').removeDialogs();
@@ -3393,7 +3397,7 @@ AgendaCreateView = Backbone.View.extend({
 				show: function(event, api){
 					// activate the color picker
 					$('[name = jqcal_agenda_create_color]').colourPicker({
-						ico: './dependencies/jquery.colourPicker.gif',
+						ico: $('.jqcal').data('plugin').get('path') + 'jquery.colourPicker.gif',
 						title: 'Pick a color.'
 					});
 					$('#jquery-colour-picker').css('zIndex', 15001);
@@ -3598,7 +3602,7 @@ AgendaEditView = Backbone.View.extend({
 					show: function(event, api){
 						// activate the color picker
 						$('[name = jqcal_agenda_edit_color]').colourPicker({
-							ico: './dependencies/jquery.colourPicker.gif',
+							ico: $('.jqcal').data('plugin').get('path') + 'jquery.colourPicker.gif',
 							title: 'Pick a color.'
 						});
 						$('#jquery-colour-picker').css('zIndex', 15001);
@@ -3697,6 +3701,11 @@ RecurrencyView = Backbone.View.extend({
 	initialize: function() {
 		var context = $('#jqcal_event_create').data('view') ? 'create' : 'edit';
 		$('[name = jqcal_event_'+context+'_recurrency]').removeAttr('checked');
+		
+		//hide the read or edit qtip
+		$('#jqcal_event_'+context).hide();
+		this.context = context;
+		
 		$('.jqcal').qtip('destroy');
 		$('#jqcal_recurrency').data('view', this).unbind('click button');
 		this.render();
@@ -3783,6 +3792,9 @@ RecurrencyView = Backbone.View.extend({
 			$('.jqcal').qtip('destroy');
 			this.$el.data('view', '');
 		}
+		
+		//show the read or edit qtip
+		$('#jqcal_event_'+this.context).show();
 	},
 	recurrency_type: function() {
 		switch($('#jqcal_recurrency_type').val()) {

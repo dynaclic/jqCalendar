@@ -211,10 +211,18 @@ var jqcal = new function() {
 				event_init_event: this.opt.event_init_event,
 				event_stop_event: this.opt.event_stop_event,
 				period_changed	: this.opt.period_changed,
-				ressources_path: this.opt.ressources_path
+				path 			: this.opt.path,
+				theme			: this.opt.theme,
+				timeout			: this.opt.timeout
 			});
 			this.data('plugin', plugin);
-
+			//theming
+			$('<link>', {
+				rel: 'stylesheet',
+				type: 'text/css',
+				href: this.opt.path + this.opt.theme
+			}).appendTo('head');
+			
 			// instantiate the plugin's view
 			var plugin_view = new PluginView({
 				model: plugin,
@@ -354,6 +362,7 @@ var jqcal = new function() {
 					});
 					event.bindTimeslots();
 				});
+				
 				var planning = $('.jqcal').data('planning');
 				if(planning.get('format') == 'month' || planning.get('format') == 'custom_week'){
 					planning.get('view').parse_each_weeks();
@@ -363,7 +372,24 @@ var jqcal = new function() {
 					planning.get('view').parse_each_day();
 				}
 			});
-
+			
+			// add recurrency
+			var agendas = $('.jqcal').data('agendas').models;
+			for(var a in agendas){
+				var events = agendas[a].get('events').models;
+				for(var e in events){
+					var event = events[e];
+					if(event.get('is_occurrence') && event.get('is_occurrence')[0] != 'c'){
+						var e = $('.jqcal').jqcal('getEventById', event.get('is_occurrence'));
+						if(e != -1){
+							event.attributes.is_occurrence = e.cid;
+						}
+						else{
+							delete(event.unset('is_occurrence'));
+						}
+					}
+				}
+			}
 			return this;
 		},
 		bindIdsToCids: function(ids) {
@@ -454,6 +480,30 @@ var jqcal = new function() {
 				}
 			});
 			return this;
+		},
+		getEventById: function(id){
+			var agendas = $('.jqcal').data('agendas').models;
+			for(var a in agendas){
+				var agenda = agendas[a].get('events').models;
+				for(var e in agenda){
+					if(agenda[e].get('id') == id){
+						return agenda[e];
+					}
+				}
+			}
+			return -1;
+		},
+		setMessage: function(message, time){
+			if(time) {
+				var timeout = time;
+			}
+			else {
+				var timeout = this.data('plugin').get('timeout');
+			}
+			$('#jqcal_info_div').html(message);
+			setTimeout(function(){
+				$('#jqcal_info_div').html("");
+			}, timeout);
 		}
 	};
 	
@@ -483,7 +533,9 @@ var jqcal = new function() {
 		hidden_days		: [],
 		nb_days			: 3,
 		nb_weeks		: 3,
-		ressources_path: './dependencies',
+		path			: './dependencies/',
+		theme			: '',
+		timeout			: 5000,
 		event_created	: function(event) {return true;},
 		event_changed	: function(event) {return true;},
 		event_removed	: function(event) {return true;},

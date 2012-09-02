@@ -40,8 +40,8 @@
 		event13 = new Date(('2012/08/23 12:00:00')).getTime();
 		event14 = new Date(('2012/08/22 00:00:00')).getTime();
 		
-		jqcal.templates.event += '<br />{{people}}';
-		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" /><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
+		/*jqcal.templates.event += '<br />{{people}}';
+		jqcal.templates.event_create += '<br />People: <input type="text" name="jqcal_event_create_people" onclick="this.focus();"/><br />Unique: <input type="checkbox" name="jqcal_event_create_unique" />'+
 			'<br />Gender: <select id="jqcal_event_create_gender" name="jqcal_event_create_gender"><option value="M">M</option><option value="F">F</option></select>';
 		jqcal.templates.event_edit += '<br />People: <input type="text" name="jqcal_event_edit_people" value="{{people}}" /><br />Unique: <input type="checkbox" name="jqcal_event_edit_unique" />'+
 			'<br />Gender: <select id="jqcal_event_edit_gender" name="jqcal_event_edit_gender"><option value="M">M</option><option value="F">F</option></select>';
@@ -67,7 +67,7 @@
 				}
 			}
 		});
-		
+		*/
 		$('#calendar').jqcal({
 			/*no_perm_agenda	: ['edit', 'create', 'delete', 'read'],
 			no_perm_event	: ['edit', 'create', 'delete', 'read'],*/
@@ -80,6 +80,7 @@
 			timezone_offset	: -120,
 			first_day		: 1,
 			planning_format	: 'week',
+			//theme			: './darkvador.css',
 			/*hidden_days		: [0,6],*/
 			nb_days			: 3,
 			nb_weeks		: 3/*,

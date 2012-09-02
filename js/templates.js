@@ -20,9 +20,11 @@ jqcal.templates = {
 				'<label for="jqcal_nb_weeks_select">Weeks: </label><select id="jqcal_nb_weeks_select">'+
 				'{{#select_weeks}}<option value={{value}}>{{value}}</option>{{/select_weeks}}'+
 				'</select>'+
+			'</span><span>'+
+				'<div id="jqcal_info_div" style="float: right; z-index: 20000;"></div>'+
 			'</span>'+
 		'</div>'+
-		'<img src="{{ressources_path}}/leftarrow.gif" id="jqcal_menu_button" style="position: absolute; top:{{top_button}}px; left: {{left_button}}px; cursor:pointer;"/>'+
+		'<img src="{{path}}leftarrow.gif" id="jqcal_menu_button" style="position: absolute; left: {{left_button}}px; cursor:pointer;"/>'+
 		'<div id="jqcal_menu" style="float:left; margin-top: 10px; width:200px;">'+
 			'Pick a date:<br /><br />'+
 			'<div id="jqcal_datepicker"></div><br /><hr />'+
@@ -140,7 +142,7 @@ jqcal.templates = {
 		'<label for="jqcal_event_edit_date_end">Ends_at: </label><input type="text" value="{{date_end}}" id="jqcal_event_edit_date_end" name="jqcal_event_edit_date_end" /> <input type="text" value="{{ends_at}}" name="jqcal_event_edit_ends_at" /><br />'+
 		'<label for="jqcal_event_edit_label">Label: </label><input type="text" id="jqcal_event_edit_label" name="jqcal_event_edit_label" value="{{label}}" /><br />'+
 		'<label for="jqcal_event_edit_description">Description: </label><textarea id="jqcal_event_edit_description" name="jqcal_event_edit_description">{{description}}</textarea><br />'+
-		'<label for="jqcal_event_edit_agenda">Agenda: </label><select id="jqcal_event_edit_agenda" name="jqcal_event_edit_agenda">{{#agendas}}<option value={{agenda}}>{{agenda}}</option>{{/agendas}}</select><br />'+
+		'<label for="jqcal_event_edit_agenda">Agenda: </label><select id="jqcal_event_edit_agenda" name="jqcal_event_edit_agenda">{{#agendas}}<option value="{{agenda}}">{{agenda}}</option>{{/agendas}}</select><br />'+
 		'<label for="jqcal_event_edit_color">Color: </label><select id="jqcal_event_edit_color" name="jqcal_event_edit_color">{{#colors}}<option value="{{color}}">#{{color}}</option>{{/colors}}</select><br />'+
 		'<label for="jqcal_event_edit_recurrency">Recurrency: </label><input type="checkbox" id="jqcal_event_edit_recurrency" name="jqcal_event_edit_recurrency" /><br />'
 	,
@@ -198,13 +200,13 @@ jqcal.templates = {
 			'<option value="monthly">Monthly</option>'+
 			'<option value="yearly">Yearly</option>'+
 		'</select><br />'+
-		'<label for="jqcal_recurrency_every">Every: </label><input type="text" id="jqcal_recurrency_every" />'+
+		'<label for="jqcal_recurrency_every">Every: </label><input type="text" id="jqcal_recurrency_every" onclick="this.focus();"/>'+
 		'<div id="jqcal_recurrency_when_weekly"></div>'+
 		'<div id="jqcal_recurrency_when_monthly"></div>'+
 		'Ends:<br />'+
-		'<input type="radio" id="jqcal_recurrency_never" name="jqcal_recurrency_end" value="never" checked="checked" /><label for="jqcal_recurrency_never">Never</label><br />'+
-		'<input type="radio" id="jqcal_recurrency_on" name="jqcal_recurrency_end" value="on" /><label for="jqcal_recurrency_on">On: </label><input type="text" id="jqcal_recurrency_on_date" disabled="disabled" /><br />'+
-		'<input type="radio" id="jqcal_recurrency_after" name="jqcal_recurrency_end" value="after" /><label for="jqcal_recurrency_after">After: </label><input type="text" id="jqcal_recurrency_after_number" disabled="disabled" /><br />'+
+		'<input type="radio" id="jqcal_recurrency_never" name="jqcal_recurrency_end" value="never" checked="checked"/><label for="jqcal_recurrency_never">Never</label><br />'+
+		'<input type="radio" id="jqcal_recurrency_on" name="jqcal_recurrency_end" value="on" /><label for="jqcal_recurrency_on">On: </label><input type="text" id="jqcal_recurrency_on_date" disabled="disabled"  onclick="this.focus();"/><br />'+
+		'<input type="radio" id="jqcal_recurrency_after" name="jqcal_recurrency_end" value="after" /><label for="jqcal_recurrency_after">After: </label><input type="text" id="jqcal_recurrency_after_number" disabled="disabled"  onclick="this.focus();"/><br />'+
 		'<button id="jqcal_recurrency_ok">Ok</button>'+
 		'<button id="jqcal_recurrency_cancel">Cancel</button>'
 };
